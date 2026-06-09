@@ -114,44 +114,9 @@ async function sendTestEmail(email) {
 //  ตรวจสอบสต็อกต่ำ/หมด และส่งแจ้งเตือน
 // ================================================================
 async function checkLowStockAlerts() {
-    // หาอีเมลที่เปิดใช้งานอยู่
-    const activeEmails = notificationEmails.filter(n => n.active).map(n => n.email);
-
-    if (activeEmails.length === 0) {
-        console.log('📧 ไม่มีผู้รับแจ้งเตือนที่เปิดใช้งาน — ข้ามการส่ง');
-        return;
-    }
-
-    // ค้นหาสินค้าที่สต็อกต่ำหรือหมด
-    const outOfStock = products.filter(p => p.stock <= 0);
-    const lowStock = products.filter(p => p.stock > 0 && p.stock <= (p.min || 0));
-
-    // กรองสินค้าที่ยังอยู่ใน Cooldown ออก
-    const now = Date.now();
-    const filterCooldown = (list) => list.filter(p => {
-        const lastSent = alertCooldowns[p.id];
-        if (lastSent && (now - lastSent) < COOLDOWN_HOURS * 60 * 60 * 1000) {
-            return false; // ยังอยู่ใน Cooldown
-        }
-        return true;
-    });
-
-    const alertOutOfStock = filterCooldown(outOfStock);
-    const alertLowStock = filterCooldown(lowStock);
-
-    // ส่งแจ้งเตือนสินค้าหมดสต็อก
-    if (alertOutOfStock.length > 0) {
-        await sendStockAlert(activeEmails, alertOutOfStock, 'out_of_stock');
-    }
-
-    // ส่งแจ้งเตือนสินค้าใกล้หมด
-    if (alertLowStock.length > 0) {
-        await sendStockAlert(activeEmails, alertLowStock, 'low_stock');
-    }
-
-    if (alertOutOfStock.length === 0 && alertLowStock.length === 0) {
-        console.log('📧 ไม่มีสินค้าที่ต้องแจ้งเตือน (หรืออยู่ใน Cooldown)');
-    }
+    // ปิดใช้งานแจ้งเตือนสต็อกต่ำ/หมด ตามความต้องการของผู้ใช้
+    console.log('📧 การแจ้งเตือนสินค้าใกล้หมด/หมดสต็อกถูกปิดการใช้งาน');
+    return;
 }
 
 // ส่งอีเมลแจ้งเตือนจริงผ่าน Backend

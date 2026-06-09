@@ -302,22 +302,9 @@ async function sendEmailViaBrevo(toEmails, subject, htmlContent) {
 
 // ฟังก์ชันตรวจสอบสต็อกและส่งแจ้งเตือนอัตโนมัติ
 async function processStockAlerts(systemName) {
-    try {
-        const adminSnapshot = await db.collection('users').where('role', 'in', ['admin', 'superadmin']).get();
-        const adminEmails = adminSnapshot.docs.map(doc => doc.data().email).filter(email => !!email);
-        if (adminEmails.length === 0) return;
-
-        const productsSnapshot = await db.collection('products').get();
-        const allProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const outOfStock = allProducts.filter(p => p.stock <= 0);
-        const lowStock = allProducts.filter(p => p.stock > 0 && p.stock < 5);
-
-        if (outOfStock.length > 0) await sendFormattedEmail(adminEmails, outOfStock, 'out_of_stock', systemName);
-        if (lowStock.length > 0) await sendFormattedEmail(adminEmails, lowStock, 'low_stock', systemName);
-    } catch (err) {
-        console.error('Auto Alert Error:', err);
-    }
+    // ปิดใช้งานตามต้องการของผู้ใช้ (สินค้าหมดสต็อกหรือใกล้หมดไม่ต้องแจ้งเตือน)
+    console.log('Stock alerts are disabled. Skipping processStockAlerts.');
+    return;
 }
 
 async function sendFormattedEmail(recipients, productList, alertType, systemName) {
@@ -362,58 +349,9 @@ app.post('/api/notifications/test', async (req, res) => {
 
 // 🔔 ส่งแจ้งเตือนสต็อกต่ำ/หมดสต็อก
 app.post('/api/send-alert', async (req, res) => {
-    const { recipients, products, alertType, systemName } = req.body;
-    if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
-        return res.status(400).json({ error: 'Recipients array is required' });
-    }
-    if (!products || !Array.isArray(products) || products.length === 0) {
-        return res.status(400).json({ error: 'Products array is required' });
-    }
-
-    try {
-        const productHtml = products.map(p => `
-            <li style="margin-bottom: 10px; padding: 10px; border-left: 4px solid ${alertType === 'out_of_stock' ? '#ef4444' : '#f59e0b'}; background: #f8fafc; list-style-type: none;">
-                <strong style="font-size: 15px; color: #1e293b;">${p.name}</strong> (รหัสพัสดุ: ${p.id})<br>
-                คงเหลือ: <span style="color: ${alertType === 'out_of_stock' ? '#ef4444' : '#f59e0b'}; font-weight: bold;">${p.stock} ${p.unit || 'หน่วย'}</span> 
-                ${alertType === 'low_stock' ? `<span style="color: #64748b; font-size: 13px;">(เกณฑ์ขั้นต่ำ: ${p.min} ${p.unit || 'หน่วย'})</span>` : ''}
-            </li>
-        `).join('');
-
-        const isOutOfStock = alertType === 'out_of_stock';
-        const title = isOutOfStock ? '⚠️ [ด่วน] พัสดุหมดสต็อก' : '🔔 [แจ้งเตือน] พัสดุใกล้หมด/เกณฑ์ต่ำ';
-        const bannerColor = isOutOfStock ? '#ef4444' : '#f59e0b';
-
-        const htmlContent = `
-            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f1f5f9; padding: 40px 10px; color: #1e293b;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
-                    <!-- Header -->
-                    <div style="background-color: ${bannerColor}; padding: 32px 24px; text-align: center;">
-                        <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">${title}</h1>
-                        <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">${systemName || 'ระบบบริหารจัดการคลังพัสดุ'}</p>
-                    </div>
-                    
-                    <!-- Content -->
-                    <div style="padding: 32px 24px;">
-                        <p style="font-size: 14px; margin-bottom: 20px; color: #475569;">พบพัสดุในคลังมีปริมาณต่ำกว่าเกณฑ์หรือหมดลง กรุณาตรวจสอบและดำเนินสั่งซื้อเพิ่มเติม:</p>
-                        <ul style="padding: 0; margin: 0;">
-                            ${productHtml}
-                        </ul>
-                    </div>
-                    
-                    <!-- Footer -->
-                    <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #f1f5f9;">
-                        <p style="margin: 0; font-size: 11px; color: #94a3b8;">ระบบแจ้งเตือนอัตโนมัติจาก NIT Inventory</p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        await sendEmailViaBrevo(recipients, `${title} - ${systemName || 'NIT Inventory'}`, htmlContent);
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Send Alert Email Error:', err);
-        res.status(500).json({ error: err.message });
-    }
+    // ปิดใช้งานตามต้องการของผู้ใช้ (สินค้าหมดสต็อกหรือใกล้หมดไม่ต้องแจ้งเตือน)
+    console.log('Stock alerts API is disabled.');
+    res.json({ success: true, message: 'Stock alerts are disabled.' });
 });
 
 app.post('/api/slips/notify-new', async (req, res) => {
