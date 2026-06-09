@@ -689,6 +689,57 @@ app.post('/api/users', async (req, res) => {
     }
 });
 
+app.post('/api/users/reset-password', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    try {
+        const link = await admin.auth().generatePasswordResetLink(email);
+
+        const htmlContent = `
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f1f5f9; padding: 40px 10px; color: #1e293b;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                    <!-- Header -->
+                    <div style="background-color: #4f46e5; padding: 32px 24px; text-align: center;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">🔑 รีเซ็ตรหัสผ่านใหม่</h1>
+                        <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">NIT Inventory — สถาบันประสาทวิทยา</p>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div style="padding: 32px 24px;">
+                        <p style="font-size: 16px; font-weight: bold; margin-top: 0;">สวัสดีครับ,</p>
+                        <p style="font-size: 14px; line-height: 24px; color: #475569;">
+                            ระบบได้รับแจ้งขอรีเซ็ตรหัสผ่านสำหรับบัญชีผู้ใช้งานของคุณ เพื่อดำเนินการตั้งรหัสผ่านใหม่ โปรดคลิกที่ปุ่มด้านล่างนี้:
+                        </p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${link}" style="display: inline-block; padding: 12px 24px; color: #ffffff; background-color: #4f46e5; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">ตั้งรหัสผ่านใหม่</a>
+                        </div>
+                        <p style="font-size: 12px; color: #94a3b8; line-height: 20px;">
+                            *หากลิงก์ด้านบนไม่สามารถกดได้ โปรดคัดลอก URL ด้านล่างนี้ไปวางในบราวเซอร์ของคุณ:<br>
+                            <span style="word-break: break-all; color: #4f46e5;">${link}</span>
+                        </p>
+                        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 24px 0;">
+                        <p style="font-size: 13px; color: #64748b;">
+                            หากคุณไม่ได้เป็นผู้ร้องขอเปลี่ยนรหัสผ่านนี้ โปรดข้ามอีเมลฉบับนี้ไปได้ทันที รหัสผ่านเดิมของคุณจะยังคงปลอดภัยครับ
+                        </p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #f1f5f9;">
+                        <p style="margin: 0; font-size: 11px; color: #94a3b8;">ระบบแจ้งเตือนอัตโนมัติจาก NIT Inventory</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        await sendEmailViaBrevo(email, '🔑 ตั้งรหัสผ่านใหม่ - NIT Inventory', htmlContent);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Reset Password Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.delete('/api/users/:uid', async (req, res) => {
     try {
         try { await admin.auth().deleteUser(req.params.uid); } catch (e) {}

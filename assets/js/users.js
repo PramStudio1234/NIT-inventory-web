@@ -137,8 +137,18 @@ async function resetUserPassword(email) {
     if (!confirm(`ส่งอีเมลรีเซ็ตรหัสผ่านไปที่ ${email} ใช่หรือไม่?`)) return;
 
     try {
-        await firebase.auth().sendPasswordResetEmail(email);
-        alert('ส่งอีเมลรีเซ็ตรหัสผ่านเรียบร้อยแล้ว! โปรดแจ้งพนักงานให้ตรวจสอบกล่องจดหมาย');
+        const res = await fetch(`${MAIL_SERVER_URL}/api/users/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            alert('✅ ส่งอีเมลรีเซ็ตรหัสผ่านเรียบร้อยแล้ว! โปรดแจ้งพนักงานให้ตรวจสอบกล่องจดหมาย');
+        } else {
+            alert('❌ ส่งไม่สำเร็จ: ' + (data.error || 'Unknown error'));
+        }
     } catch (error) {
         alert('เกิดข้อผิดพลาด: ' + error.message);
     }
