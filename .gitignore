@@ -1,0 +1,15 @@
+node_modules/
+.DS_Store
+server/node_modules/
+server/.env
+server/serviceAccountKey.json
+server/serviceAccountKey.js
+server/uploads/
+scratch/
+server/*-adminsdk-*.json
+*.xlsx
+*.xls
+*.pdf
+*.docx
+*.doc
+~$*

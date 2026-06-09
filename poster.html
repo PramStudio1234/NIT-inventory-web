@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIT Inventory - Project Day Poster</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* A4 Page Layout & Print Configurations */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Prompt', sans-serif;
+            background-color: #e2e8f0;
+            color: #1e293b;
+            -webkit-print-color-adjust: exact;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .a4-page {
+            width: 210mm;
+            height: 296mm; /* Safe height to prevent blank page overflow in Chrome print */
+            background: #f8fafc;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+            position: relative;
+            box-sizing: border-box;
+            padding: 8mm 12mm 8mm 12mm;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-top: 4mm solid #4f46e5;
+        }
+        @media print {
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            body {
+                background: none;
+            }
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                width: 210mm;
+                height: 296mm;
+                border-top: 4mm solid #4f46e5;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+        }
+
+        /* Header Layout Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid #cbd5e1;
+            padding-bottom: 2.5mm;
+            margin-bottom: 3.5mm;
+        }
+        .header-logo-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dept-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+        .project-day-badge {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border: 1.5px solid #a5b4fc;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10.5px;
+            font-weight: 800;
+            color: #3730a3;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 3px 6px rgba(79, 70, 229, 0.08);
+        }
+        
+        /* Main Title Banner (Indigo Gradient Web Theme) */
+        .title-banner {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4f46e5 100%);
+            color: #ffffff;
+            padding: 4mm 6mm;
+            border-radius: 18px;
+            text-align: center;
+            margin-bottom: 4mm;
+            box-shadow: 0 10px 25px rgba(49, 46, 129, 0.2);
+            position: relative;
+            border: 1.5px solid #6366f1;
+        }
+        .title-banner h1 {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            line-height: 1.3;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        }
+        .title-banner p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            opacity: 0.95;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .title-banner .scholarship-tag {
+            position: absolute;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(3, 105, 161, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* Two-Column Grid Setup */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5mm;
+            align-items: start;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 3.5mm;
+        }
+
+        /* Section Cards (SaaS Style, Floating White Cards) */
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 3.5mm 4.5mm;
+            position: relative;
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.02);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .section-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
+        }
+        .section-card.accent-blue { border-left: 4.5px solid #0284c7; }
+        .section-card.accent-red { border-left: 4.5px solid #ef4444; }
+        .section-card.accent-green { border-left: 4.5px solid #10b981; }
+        .section-card.accent-indigo { border-left: 4.5px solid #4f46e5; }
+        
+        .card-title {
+            margin: 0 0 8px 0;
+            font-size: 11.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-card.accent-blue .card-title { color: #0284c7; }
+        .section-card.accent-red .card-title { color: #ef4444; }
+        .section-card.accent-green .card-title { color: #10b981; }
+        .section-card.accent-indigo .card-title { color: #4f46e5; }
+
+        /* Browser Mockup Styles */
+        .browser-mockup {
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 2.5mm;
+            padding: 3.5mm 4mm;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .browser-mockup:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07);
+        }
+        .browser-header {
+            height: 12px;
+            background: #f8fafc;
+            border-bottom: 1px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            gap: 4px;
+            margin-bottom: 0.5mm;
+        }
+        .browser-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .browser-dot.red { background: #ef4444; }
+        .browser-dot.yellow { background: #f59e0b; }
+        .browser-dot.green { background: #10b981; }
+
+        /* Content List Styles */
+        .card-body {
+            margin-top: 1mm;
+        }
+        .info-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .info-list li {
+            margin-bottom: 2.5mm;
+            font-size: 11px;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: #1e293b;
+        }
+        .info-list li:last-child {
+            margin-bottom: 0;
+        }
+        .info-list li i {
+            margin-top: 3.5px;
+            font-size: 11px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .info-list li .bullet-red { color: #ef4444; }
+        .info-list li .bullet-green { color: #10b981; }
+        .info-list li .bullet-blue { color: #0284c7; }
+        
+        /* Theme-based bold highlighted keywords */
+        .section-card.accent-red strong { color: #991b1b; font-weight: 700; }
+        .section-card.accent-green strong { color: #065f46; font-weight: 700; }
+        .section-card.accent-indigo strong { color: #3730a3; font-weight: 700; }
+        .section-card.accent-blue strong { color: #0369a1; font-weight: 700; }
+
+        /* Tech Stack Icons */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1.5mm;
+        }
+        .tech-item {
+            border-radius: 10px;
+            padding: 10px 6px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 3px 6px rgba(15, 23, 42, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .tech-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(15, 23, 42, 0.05);
+        }
+        .tech-item.frontend {
+            background-color: #fff7ed;
+            border: 1.5px solid #ffedd5;
+            color: #ea580c;
+        }
+        .tech-item.backend {
+            background-color: #eff6ff;
+            border: 1.5px solid #dbeafe;
+            color: #2563eb;
+        }
+        .tech-item.database {
+            background-color: #f0f9ff;
+            border: 1.5px solid #e0f2fe;
+            color: #0284c7;
+        }
+        .tech-item i {
+            font-size: 18px;
+        }
+
+        /* Mockup Item Inside Browser */
+        .mockup-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5mm;
+        }
+        .mockup-image {
+            width: 100%;
+            height: 38mm; /* Fixed height to keep columns perfectly balanced and prevent overflow */
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06);
+            object-fit: cover;
+            object-position: top;
+            background-color: #ffffff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .mockup-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+        }
+
+        /* Achievements / Outcomes Footer Blocks */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1.5mm;
+        }
+        .achievement-block {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+            border: 1.5px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 800;
+            color: #065f46;
+            box-shadow: 0 3px 5px rgba(16, 185, 129, 0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .achievement-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.08);
+        }
+        .achievement-block i {
+            font-size: 18px;
+            color: #10b981;
+            margin-bottom: 2px;
+            text-shadow: 0 1px 2px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Footer Layout */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1.5px solid #cbd5e1;
+            padding-top: 2.5mm;
+            margin-top: 3.5mm;
+            font-size: 9.5px;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="a4-page">
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="header-logo-left">
+                <i class="fa-solid fa-brain" style="font-size: 26px; color: #4f46e5;"></i>
+                <div>
+                    <h3 class="dept-title">NIT INVENTORY SYSTEM</h3>
+                    <span style="font-size: 8px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Neurological Institute of Thailand | Division of Digital Tech</span>
+                </div>
+            </div>
+            <div class="project-day-badge">
+                <i class="fa-solid fa-trophy"></i> PROJECT DAY 2026
+            </div>
+        </div>
+
+        <!-- Main Title Banner -->
+        <div class="title-banner">
+            <h1>NIT Inventory Management System</h1>
+            <p>Enterprise Real-time Inventory & Smart Data-Parsing Solution | ระบบตัดยอดคลังและวิเคราะห์พัสดุทางการแพทย์แบบเรียลไทม์</p>
+            <div class="scholarship-tag">Medical Media Innovation Product</div>
+        </div>
+
+        <!-- Two-Column Main Content -->
+        <div class="main-content">
+            
+            <!-- Left Column -->
+            <div class="column">
+                
+                <!-- About Team (SaaS Developer Profiles) -->
+                <div class="section-card accent-indigo">
+                    <h4 class="card-title">
+                        <i class="fa-solid fa-users-gear"></i> Developer Profiles
+                    </h4>
+                    <div class="profile-container" style="display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="background: #e0e7ff; color: #4f46e5; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);">
+                                TN
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; font-weight: 800; color: #1e293b; line-height: 1.2;">นายติณณภพ เขียวแก่</div>
+                                <div style="font-size: 8.5px; color: #64748b; font-weight: 600;">Full-Stack & DevOps Engineer</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="background: #e0e7ff; color: #4f46e5; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);">
+                                NP
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; font-weight: 800; color: #1e293b; line-height: 1.2;">นางสาว นัฐริกา บุญเที่ยง</div>
+                                <div style="font-size: 8.5px; color: #64748b; font-weight: 600;">UI/UX & Frontend Architect</div>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 4px; font-size: 8px; color: #64748b; font-weight: 700; text-transform: uppercase; display: flex; justify-content: space-between;">
+                            <span>Media Technology (KMUTT)</span>
+                            <span>เอกนวัตกรรมมีเดียทางการแพทย์</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THE PROBLEMS -->
+                <div class="section-card accent-red">
+                    <h4 class="card-title">
+                        <i class="fa-solid fa-triangle-exclamation"></i> ปัญหาของกระบวนการเดิม
+                    </h4>
+                    <div class="card-body">
+                        <ul class="info-list">
+                            <li>
+                                <i class="fa-solid fa-circle-xmark bullet-red"></i>
+                                <span><strong>ตารางข้อมูลไม่เป็นระเบียบ (Unstructured Excel):</strong> โครงสร้างไฟล์ Excel ต้นทางไม่คงที่และมีเซลล์ผสาน ทำให้คอลัมน์และข้อมูลสต็อกคลาดเคลื่อน</span>
+                            </li>
+                            <li>
+                                <i class="fa-solid fa-circle-xmark bullet-red"></i>
+                                <span><strong>คำนวณย้อนหลังล่าช้า (Audit Inefficiency):</strong> ขาดระบบสรุปยอดสต็อก ยกยอด-รับ-ใช้ ไปย้อนหลังอัตโนมัติ ทำให้เอกสารสิ้นเดือนล่าช้า</span>
+                            </li>
+                            <li>
+                                <i class="fa-solid fa-circle-xmark bullet-red"></i>
+                                <span><strong>การแจ้งเตือนไม่ฉับไว (Communication Gaps):</strong> ผู้ดูแลไม่ได้รับแจ้งเตือนทันที เมื่อวัสดุลดต่ำถึงจุดวิกฤตหรือมีคำขออนุมัติเบิกใหม่</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- THE SOLUTIONS -->
+                <div class="section-card accent-green">
+                    <h4 class="card-title">
+                        <i class="fa-solid fa-circle-check"></i> โซลูชันเพื่อการใช้งานในองค์กร
+                    </h4>
+                    <div class="card-body">
+                        <ul class="info-list">
+                            <li>
+                                <i class="fa-solid fa-bolt bullet-green"></i>
+                                <span><strong>Dynamic Header Parser:</strong> API วิเคราะห์คีย์เวิร์ดตารางอัตโนมัติ นำเข้าข้อมูลสำเร็จ 100% โดยไม่ต้องปรับตารางเดิมหรือล็อกพิกัด</span>
+                            </li>
+                            <li>
+                                <i class="fa-solid fa-cloud bullet-green"></i>
+                                <span><strong>Cloud-Native DB Architecture:</strong> บริหารผ่าน Firebase DB แสดงผลสต็อกเรียลไทม์ และจัดลำดับรายการอ้างอิงตรงตามไฟล์ต้นฉบับเดิม</span>
+                            </li>
+                            <li>
+                                <i class="fa-solid fa-bell bullet-green"></i>
+                                <span><strong>Automated SMTP Alerting:</strong> อีเมล SMTP แจ้งเตือนแอดมินทันทีเมื่อมีคำขออนุมัติ หรือสต็อกพัสดุลดต่ำกว่าจุด Reorder Point</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- KEY VALUE & ACHIEVEMENTS -->
+                <div class="section-card accent-green">
+                    <h4 class="card-title">
+                        <i class="fa-solid fa-square-check"></i> Key Value & Achievements
+                    </h4>
+                    <div class="card-body">
+                        <div class="achievements-grid">
+                            <div class="achievement-block">
+                                <i class="fa-solid fa-bolt"></i>
+                                <span style="font-weight: 800; font-size: 9.5px;">ลดงานเอกสาร 95%</span>
+                                <span style="font-size: 7.5px; font-weight: 500; opacity: 0.85; line-height: 1.1; margin-top: 2px;">วิเคราะห์นำเข้าข้อมูลอัจฉริยะ</span>
+                            </div>
+                            <div class="achievement-block">
+                                <i class="fa-solid fa-shield-heart"></i>
+                                <span style="font-weight: 800; font-size: 9.5px;">ความคลาดเคลื่อน 0%</span>
+                                <span style="font-size: 7.5px; font-weight: 500; opacity: 0.85; line-height: 1.1; margin-top: 2px;">ตรวจจับหัวตารางและคำนวณแม่นยำ</span>
+                            </div>
+                            <div class="achievement-block">
+                                <i class="fa-solid fa-rocket"></i>
+                                <span style="font-weight: 800; font-size: 9.5px;">คลาวด์ Real-time</span>
+                                <span style="font-size: 7.5px; font-weight: 500; opacity: 0.85; line-height: 1.1; margin-top: 2px;">ซิงก์ยอดสต็อกผ่าน Firebase</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="column">
+                
+                <!-- THE CONCEPT -->
+                <div class="section-card accent-blue">
+                    <h4 class="card-title">
+                        <i class="fa-solid fa-brain"></i> The Concept
+                    </h4>
+                    <div class="card-body">
+                        <ul class="info-list">
+                            <li>
+                                <i class="fa-solid fa-lightbulb bullet-blue"></i>
+                                <span><strong>Smart Medical Inventory:</strong> ยกระดับการคุมคลังวัสดุจากระบบบันทึกมือและตาราง Excel สู่เว็บแอปตัดยอดวัสดุทางการแพทย์แบบรวมศูนย์</span>
+                            </li>
+                            <li>
+                                <i class="fa-solid fa-circle-check bullet-green"></i>
+                                <span><strong>Intelligent Parser:</strong> อำนวยความสะดวกในการนำเข้าตารางข้อมูลด้วยการตรวจจับหัวตาราง และตัดยอดสต็อกแบบเรียลไทม์ 100%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- THE JOURNEY (Technology Stack) -->
+                <div class="section-card accent-indigo">
+                    <h4 class="card-title">
+                        <i class="fa-solid fa-laptop-code"></i> Technology Stack
+                    </h4>
+                    <div class="card-body">
+                        <div class="tech-grid">
+                            <div class="tech-item frontend">
+                                <i class="fa-brands fa-html5"></i>
+                                <span style="font-weight: 800; font-size: 9.5px;">Frontend UI</span>
+                                <span style="font-size: 7.5px; opacity: 0.85; font-weight: 600; line-height: 1.1; margin-top: 2px;">HTML5, CSS3, JS<br>ChartJS Dashboard</span>
+                            </div>
+                            <div class="tech-item backend">
+                                <i class="fa-brands fa-node-js"></i>
+                                <span style="font-weight: 800; font-size: 9.5px;">API Server</span>
+                                <span style="font-size: 7.5px; opacity: 0.85; font-weight: 600; line-height: 1.1; margin-top: 2px;">Node.js / Express<br>RESTful Parsing API</span>
+                            </div>
+                            <div class="tech-item database">
+                                <i class="fa-solid fa-cloud"></i>
+                                <span style="font-weight: 800; font-size: 9.5px;">Cloud DB</span>
+                                <span style="font-size: 7.5px; opacity: 0.85; font-weight: 600; line-height: 1.1; margin-top: 2px;">Firestore / Auth<br>Firebase Cloud Host</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THE SYSTEM PREVIEW (Browser Mockup) -->
+                <div class="browser-mockup">
+                    <div class="browser-header">
+                        <span class="browser-dot red"></span>
+                        <span class="browser-dot yellow"></span>
+                        <span class="browser-dot green"></span>
+                        <span style="font-size: 7.5px; color: #94a3b8; font-family: 'Inter', sans-serif; font-weight: 600; margin-left: 6px; letter-spacing: 0.3px;">nit-inventory-system.web.app</span>
+                    </div>
+                    <div class="mockup-item">
+                        <h5 style="margin: 0 0 3px 0; font-size: 9.5px; font-weight: 800; color: #334155; display: flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-display" style="color: #4f46e5;"></i> หน้าคลังสินค้าและกราฟแดชบอร์ดสถิติ
+                        </h5>
+                        <img src="assets/img/media__1779782588316.png" alt="หน้าคลังสินค้าจริง" class="mockup-image">
+                    </div>
+                    <div class="mockup-item">
+                        <h5 style="margin: 0 0 3px 0; font-size: 9.5px; font-weight: 800; color: #334155; display: flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-file-invoice-dollar" style="color: #4f46e5;"></i> รายงานประวัติคำนวณย้อนหลังรายเดือน
+                        </h5>
+                        <img src="assets/img/media__1779785079107.png" alt="หน้าตารางรายงานสรุปจริง" class="mockup-image">
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-left">
+                <span>© 2026 MMI340 Project | KMUTT Media Technology | Neurological Institute of Thailand</span>
+            </div>
+            <div class="feedback-box" style="display: flex; align-items: center; gap: 6px; border: 1.5px solid #4f46e5; padding: 4px 10px; border-radius: 8px; background: #ffffff; font-weight: 800; font-size: 9.5px; color: #4f46e5; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1); transition: transform 0.2s ease;">
+                <i class="fa-solid fa-envelope" style="color: #4f46e5; font-size: 11px;"></i>
+                FEEDBACK : salita.eia@kmutt.ac.th
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

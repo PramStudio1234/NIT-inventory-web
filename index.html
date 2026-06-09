@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- บังคับให้เว็บไซต์แสดงผลได้พอดีกับขนาดหน้าจอมือถือ/แท็บเล็ต (Responsive) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ชื่อบนแท็บของเบราว์เซอร์ -->
+    <title>NIT Inventory - สถาบันประสาทวิทยา</title>
+
+    <!-- โหลด Tailwind CSS (ตัวช่วยจัดโครงสร้างหน้าตา UI อย่างรวดเร็ว) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลด Chart.js (ตัวช่วยวาดกราฟสถิติ) - อาจนำมาใช้ในอนาคต -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- โหลดฟอนต์ไอคอน FontAwesome (พวกรูปไอคอนกล่อง, กุญแจ ฯลฯ) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- โหลดฟอนต์ Prompt จาก Google Fonts ให้ตัวอักษรไทยสวยและเป็นทางการ -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- โหลดไฟล์ CSS ตกแต่งเพิ่มเติมของโปรเจกต์ที่เราเขียนแยกไว้ -->
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+
+<!-- กำหนดพื้นหลังของจอ (bg-slate-50), ให้จอเต็มความสูง (h-screen), ไม่เลื่อนกริ่งรบกวน (overflow-hidden) -->
+
+<body class="bg-slate-50 flex h-screen overflow-hidden text-slate-800">
+
+    <!-- ============================================== -->
+    <!-- แถบเมนูด้านซ้าย (SIDEBAR) -->
+    <!-- ============================================== -->
+    <aside id="sidebar"
+        class="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 print:hidden">
+
+        <!-- ส่วนหัวของโลโก้เมนูซ้าย -->
+        <div class="p-6 border-b border-slate-100 flex items-center gap-3 text-indigo-600">
+            <i class="fa-solid fa-brain text-2xl"></i> <!-- ไอคอนสมองสื่อถึงประสาทวิทยา -->
+            <div class="flex flex-col">
+                <h1 class="text-lg font-extrabold tracking-tight leading-none">NIT</h1>
+                <span class="text-[10px] text-slate-500 font-bold mt-1">สถาบันประสาทวิทยา</span>
+            </div>
+        </div>
+
+        <!-- รายการปุ่มกด (Navigation) -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+
+            <!-- ปุ่ม 1. ภาพรวม (Dashboard) สำหรับ Admin เท่านั้น (คลาส role-admin บังคับสิทธิ์อยู่) -->
+            <button onclick="switchTab('dashboard')" id="nav-dashboard"
+                class="role-admin nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-100">
+                <i class="fa-solid fa-chart-pie w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left">ภาพรวม (Dashboard)</span>
+            </button>
+
+            <!-- ปุ่ม 2. คลังสินค้า สำหรับ Admin พ่อบ้าน (คลาส role-admin) -->
+            <button onclick="switchTab('inventory')" id="nav-inventory"
+                class="role-admin nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-100">
+                <i class="fa-solid fa-boxes-stacked w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left">สต็อกพัสดุ / ครุภัณฑ์</span>
+            </button>
+
+            <!-- ปุ่ม 3. การเบิกยืมของพนักงานทั่วไป (หมวด User เป็นคลาส role-user) -->
+            <button onclick="switchTab('borrow')" id="nav-borrow"
+                class="role-user nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-100">
+                <i class="fa-solid fa-hand-holding-hand w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left">ยืม/เบิก พัสดุ</span>
+            </button>
+
+            <button onclick="switchTab('logs')" id="nav-logs"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-100">
+                <i class="fa-solid fa-clock-rotate-left w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left">ประวัติรายการ (Logs)</span>
+            </button>
+
+            <!-- ปุ่ม 5. รายงานสรุป สำหรับผู้ดูแลเท่านั้น -->
+            <button onclick="switchTab('report')" id="nav-report"
+                class="role-admin nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-100">
+                <i class="fa-solid fa-file-contract w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left">รายงานสรุปผล</span>
+            </button>
+
+            <!-- ปุ่ม 6. รายการรออนุมัติ (Admin Only) -->
+            <button onclick="switchTab('approvals')" id="nav-approvals"
+                class="role-admin nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-100">
+                <i class="fa-solid fa-bell-concierge w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left">รายการรออนุมัติ</span>
+                <span id="badge-approval-count"
+                    class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hide">0</span>
+            </button>
+
+
+
+            <!-- ปุ่ม 8. จัดการระบบผู้ใช้ สำหรับระดับสูงสุด Super Admin เท่านั้น -->
+            <button onclick="switchTab('users')" id="nav-users"
+                class="role-superadmin nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-500 hover:bg-slate-100">
+                <i class="fa-solid fa-users-gear w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left">จัดการผู้ใช้งาน</span>
+            </button>
+        </nav>
+
+        <!-- ส่วนท้ายสุดตรงปุ่มล้างระบบที่สงวนให้ Super Admin -->
+        <div class="p-4 border-t border-slate-100 role-superadmin">
+            <button onclick="clearStorage()"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+                <i class="fa-solid fa-rotate-right w-5 px-1 text-center"></i>
+                <span class="font-semibold text-left text-sm">รีเซ็ตข้อมูลระบบ</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Overlay สำหรับมือถือเวลาเปิด Sidebar -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden">
+    </div>
+
+    <!-- ============================================== -->
+    <!-- ลานกว้างหลัก (MAIN CONTENT) แสดงข้อมูลทางขวา -->
+    <!-- ============================================== -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+
+        <!-- แถบด้านบน (HEADER) -->
+        <header
+            class="glass border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-10 shadow-sm print:hidden">
+            <!-- ซ้าย: เปลี่ยนชื่อหัวข้ออัตโนมัติตาม Tab ที่เลือก -->
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()"
+                    class="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h2 id="page-title" class="text-2xl font-bold text-slate-800 tracking-tight">ภาพรวมระบบ</h2>
+            </div>
+
+            <!-- ขวา: ข้อมูลผู้ใช้งานจริงและปุ่ม Logout -->
+            <div id="user-profile-section"
+                class="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-slate-200 hide">
+                <div class="flex flex-col items-end">
+                    <span id="display-user-name" class="text-sm font-bold text-slate-700">กำลังโหลด...</span>
+                    <span id="display-user-role"
+                        class="text-[10px] uppercase font-bold text-blue-500 bg-blue-50 px-2 rounded-full">USER</span>
+                </div>
+                <button onclick="logoutUser()"
+                    class="w-10 h-10 rounded-full bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-500 transition-colors flex justify-center items-center">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- โซนสำหรับบรรจุเนื้อหาเว็บ สามารถเลื่อน Scrollbar เติมเนื้อหาดิ่งลงไปได้ -->
+        <div class="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+            <div class="max-w-7xl mx-auto w-full">
+
+                <!-- [ส่วนแสดงผลที่ 1] ภาพรวมสถิติ Dashboard -->
+                <!-- ถูกครอบด้วย div คลาส view-section เพื่อให้ซ่อนได้ง่าย -->
+                <div id="view-dashboard" class="view-section space-y-8 hide">
+                    <!-- จัดเป็นกริด 3 คอลัมน์บนจอใหญ่ และ 1 คอลัมน์บนมือถือ -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                        <!-- ช่องสถิติกล่อง 1 : จำนวนพัสดุรวม -->
+                        <div
+                            class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-500 mb-1">จำนวนพัสดุในคลัง</p>
+                                    <h3 id="stat-total-items" class="text-3xl font-extrabold text-slate-800">0</h3>
+                                </div>
+                                <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl"><i
+                                        class="fa-solid fa-boxes-stacked text-xl"></i></div>
+                            </div>
+                        </div>
+
+                        <!-- ช่องสถิติกล่อง 2 : ระวังของใกล้หมด ขอบส้ม (amber) -->
+                        <div
+                            class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow border-l-4 border-l-amber-400">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-500 mb-1">ใกล้หมด / ต่ำกว่าเกณฑ์</p>
+                                    <h3 id="stat-lowstock" class="text-3xl font-extrabold text-slate-800">0</h3>
+                                </div>
+                                <div class="p-3 bg-amber-50 text-amber-500 rounded-2xl"><i
+                                        class="fa-solid fa-triangle-exclamation text-xl"></i></div>
+                            </div>
+                        </div>
+
+                        <!-- ช่องสถิติกล่อง 3 : เช็คว่ามีครุภัณฑ์ไหนรอกลับมาส่งไหม -->
+                        <div
+                            class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow border-l-4 border-l-blue-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-500 mb-1">รอการคืน (ครุภัณฑ์)</p>
+                                    <h3 id="stat-pending-return" class="text-3xl font-extrabold text-slate-800">0</h3>
+                                </div>
+                                <div class="p-3 bg-indigo-50 text-indigo-500 rounded-2xl"><i
+                                        class="fa-solid fa-reply-all text-xl"></i></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- [ส่วนแสดงผลย่อย ใน Dashboard] กราฟประวัติการใช้งาน -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-8">
+                        <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                            <h3 class="text-lg font-bold text-slate-800"><i
+                                    class="fa-solid fa-chart-column text-blue-500"></i> สถิติการเบิก-ยืม ประจำเดือน ท็อป
+                                10</h3>
+
+                            <!-- ตัวกรองเลือกเดือนและปี -->
+                            <div class="flex gap-3">
+                                <select id="chart-month" onchange="renderUsageChart()"
+                                    class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                                    <option value="all">รวมทั้งปี</option>
+                                    <option value="0">มกราคม</option>
+                                    <option value="1">กุมภาพันธ์</option>
+                                    <option value="2">มีนาคม</option>
+                                    <option value="3">เมษายน</option>
+                                    <option value="4">พฤษภาคม</option>
+                                    <option value="5">มิถุนายน</option>
+                                    <option value="6">กรกฎาคม</option>
+                                    <option value="7">สิงหาคม</option>
+                                    <option value="8">กันยายน</option>
+                                    <option value="9">ตุลาคม</option>
+                                    <option value="10">พฤศจิกายน</option>
+                                    <option value="11">ธันวาคม</option>
+                                </select>
+
+                                <select id="chart-year" onchange="renderUsageChart()"
+                                    class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                                    <!-- ตัวเลือกปี จะถูกเติมอัตโนมัติผ่าน JS อิงจากประวัติ Log ที่มี -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- พื้นที่สำหรับวาง Canvas วาดกราฟ -->
+                        <div class="relative h-[350px] w-full">
+                            <canvas id="usageChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- [ส่วนแสดงผลที่ 2] ตารางสินค้าคลังและปุ่มเพิ่มของ (Inventory) -->
+                <!-- ซ่อนไว้แต่แรกด้วยคลาส hide -->
+                <div id="view-inventory" class="view-section space-y-6 hide">
+
+                    <!-- ส่วนหัวสำหรับค้นหาและปุ่มเพิ่มใหม่ -->
+                    <div class="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <div class="relative flex-1 min-w-[250px]">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" onkeyup="searchInventory(this.value)"
+                                placeholder="ค้นหารหัส หรือชื่อสินค้า..."
+                                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <button onclick="openAddModal()"
+                                class="role-superadmin bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-colors shadow-sm whitespace-nowrap">
+                                <i class="fa-solid fa-plus mr-1"></i> เพิ่มรายการใหม่
+                            </button>
+                            <button onclick="openImportModal()"
+                                class="role-superadmin bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-colors shadow-sm whitespace-nowrap">
+                                <i class="fa-solid fa-file-import mr-1"></i> นำเข้าไฟล์
+                            </button>
+                            <button onclick="clearAllProducts()"
+                                class="role-superadmin bg-white border border-red-200 hover:bg-red-50 text-red-600 px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-colors shadow-sm whitespace-nowrap">
+                                <i class="fa-solid fa-trash-arrow-up mr-1"></i> ล้างทั้งหมด
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ตารางแสดงสินค้า -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <!-- หัวตาราง -->
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                                <tr>
+                                    <th class="px-6 py-4">ประเภท</th>
+                                    <th class="px-6 py-4">รหัส / ชื่อพัสดุ</th>
+                                    <th class="px-6 py-4">หมวดหมู่</th>
+                                    <th class="px-6 py-4 text-right">คงเหลือ</th>
+                                    <th class="px-6 py-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <!-- บอดี้ตาราง (รอ JavaScript Render มาใส่ในนี้) -->
+                            <tbody id="inventory-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                        <!-- ส่วนควบคุมเลขหน้า (Pagination) -->
+                        <div id="inventory-pagination"></div>
+                    </div>
+                </div>
+
+                <!-- [ส่วนแสดงผลที่ 3] หน้าจอสำหรับการเบิก-ยืม -->
+                <div id="view-borrow" class="view-section hide grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- ฝั่งซ้าย: ฟอร์มเลือกพัสดุลงตะกร้า (ปรับปรุง: เพิ่มระบบค้นหาและกรองหมวดหมู่) -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+                            <div class="flex items-center gap-2 mb-5">
+                                <i class="fa-solid fa-cart-plus text-blue-600 text-xl"></i>
+                                <h3 class="font-bold text-slate-800">เพิ่มรายการเบิก-ยืม</h3>
+                            </div>
+
+                            <div class="space-y-4">
+
+                                <!-- ★ ช่องค้นหาพัสดุ (ใหม่) -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">
+                                        <i class="fa-solid fa-magnifying-glass text-blue-400 mr-1"></i>ค้นหาพัสดุ
+                                    </label>
+                                    <div class="relative">
+                                        <i
+                                            class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input id="borrow-search" type="text" oninput="filterBorrowProducts()"
+                                            placeholder="พิมพ์ชื่อ หรือ รหัสพัสดุ..."
+                                            class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
+                                    </div>
+                                </div>
+
+                                <!-- ★ กรองตามประเภท: เบิกขาด / ยืมคืน (ใหม่) -->
+                                <div>
+                                    <label
+                                        class="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wide">ประเภทการเบิก</label>
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick="setBorrowTypeFilter('all')" id="borrow-type-all"
+                                            class="borrow-type-btn flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all border border-blue-500 bg-blue-600 text-white shadow-sm">
+                                            <i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด
+                                        </button>
+                                        <button type="button" onclick="setBorrowTypeFilter('consumable')"
+                                            id="borrow-type-consumable"
+                                            class="borrow-type-btn flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all border border-slate-200 bg-white text-slate-600 hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700">
+                                            <i class="fa-solid fa-box-open mr-1"></i>เบิกขาด
+                                        </button>
+                                        <button type="button" onclick="setBorrowTypeFilter('asset')"
+                                            id="borrow-type-asset"
+                                            class="borrow-type-btn flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all border border-slate-200 bg-white text-slate-600 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">
+                                            <i class="fa-solid fa-cube mr-1"></i>ยืมคืน
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- ★ กรองตามหมวดหมู่ (ใหม่) -->
+                                <div>
+                                    <label
+                                        class="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wide">หมวดหมู่พัสดุ</label>
+                                    <div id="borrow-category-tabs" class="flex flex-wrap gap-1.5">
+                                        <!-- ปุ่มหมวดหมู่จะถูกสร้างอัตโนมัติจาก JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- จำนวนผลลัพธ์ที่พบ -->
+                                <div id="borrow-result-count"
+                                    class="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-list-check text-blue-400"></i>
+                                    <span>พบ 0 รายการ</span>
+                                </div>
+
+                                <!-- Dropdown เลือกพัสดุ (เดิม แต่จะถูก filter ด้วยระบบใหม่) -->
+                                <div>
+                                    <label
+                                        class="block text-sm font-semibold text-slate-700 mb-1">เลือกรายการพัสดุ</label>
+                                    <select id="user-product" onchange="onProductSelect()"
+                                        class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"></select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-700 mb-1">จำนวน</label>
+                                        <input id="user-qty" type="number" value="1" min="1"
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-700 mb-1">หน่วยเบิก</label>
+                                        <select id="user-unit-type"
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                            <option value="small">หน่วยย่อย</option>
+                                            <option value="large">หน่วยใหญ่</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="asset-fields"
+                                    class="hide bg-indigo-50/50 p-4 border border-indigo-100 rounded-xl space-y-3">
+                                    <div class="flex items-center gap-2 text-indigo-700 mb-1">
+                                        <i class="fa-solid fa-clipboard-check"></i>
+                                        <span class="text-xs font-bold uppercase">ข้อมูลเพิ่มเติมสำหรับครุภัณฑ์</span>
+                                    </div>
+                                    <input id="user-asset-no" type="text" placeholder="ระบุเลขครุภัณฑ์ (ถ้าทราบ)"
+                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label
+                                                class="block text-[10px] font-bold text-slate-500 mb-1">วัน/เวลาที่ยืม</label>
+                                            <input id="user-borrow-date" type="datetime-local"
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-[10px] font-bold text-slate-500 mb-1">คาดว่าจะคืน</label>
+                                            <input id="user-return-date" type="datetime-local"
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                                        </div>
+                                    </div>
+                                    <textarea id="user-note" rows="2" placeholder="หมายเหตุ/จุดประสงค์ทางการแพทย์"
+                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
+                                </div>
+
+                                <button onclick="addToCart()"
+                                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-100">
+                                    <i class="fa-solid fa-plus mr-1"></i> เพิ่มลงรายการ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ฝั่งขวา: ตะกร้าสรุปรายการก่อนส่งใบเบิก -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div
+                            class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full min-h-[400px]">
+                            <div
+                                class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <h3 class="font-bold text-slate-800 tracking-tight">ร่างใบเบิกพัสดุ (Requisition Slip)
+                                </h3>
+                                <span id="cart-item-count"
+                                    class="px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-600">0
+                                    รายการ</span>
+                            </div>
+
+                            <div class="flex-grow overflow-auto p-0">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-white text-slate-400 font-bold border-b border-slate-100">
+                                        <tr>
+                                            <th class="px-6 py-3">รายละเอียดสินค้า</th>
+                                            <th class="px-6 py-3 text-center">จำนวน</th>
+                                            <th class="px-6 py-3 text-center">หน่วยนับ</th>
+                                            <th class="px-6 py-3 text-center">ลบ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cart-table-body" class="divide-y divide-slate-50">
+                                        <!-- รายการในตะกร้าจะโชว์ที่นี่ -->
+                                        <tr>
+                                            <td colspan="4" class="py-20 text-center text-slate-400">
+                                                <i
+                                                    class="fa-solid fa-basket-shopping text-4xl mb-3 block opacity-20"></i>
+                                                ยังไม่มีพัสดุในใบเบิก
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="p-6 border-t border-slate-100 bg-slate-50/50">
+                                <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
+                                    <div class="text-sm text-slate-500 font-medium">
+                                        <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i>
+                                        ทุกรายการในใบเบิกนี้จะต้องรอการอนุมัติจาก Admin ก่อนสต็อกถึงจะตัดจริง
+                                    </div>
+                                    <button onclick="submitSlip()" id="btn-submit-slip" disabled
+                                        class="px-10 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-100">
+                                        <i class="fa-solid fa-paper-plane mr-2"></i> ส่งใบเบิก (Request Approval)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [ส่วนแสดงผลที่ 4] หน้าต่างประวัติรายการ -->
+            <div id="view-logs" class="view-section space-y-6 hide">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+                    <!-- หัวของตารางประวัติ -->
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">ประวัติรายการในระบบ</h3>
+                            <p class="text-xs text-slate-500 mt-1">Admin เห็นทั้งหมด / User จะเห็นเฉพาะของตนเอง (จำลอง)
+                            </p>
+                        </div>
+                        <button onclick="deleteAllLogs()"
+                            class="role-superadmin px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-bold rounded-lg transition-all shadow-sm border border-red-200 flex items-center gap-2">
+                            <i class="fa-solid fa-trash-can"></i> ลบทั้งหมด
+                        </button>
+                    </div>
+
+                    <!-- ตารางเก็บประวัติขยับกล่องพัสดุ (รอ JavaScript ยัดลงมา) -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold tracking-wide">
+                                <tr>
+                                    <th class="px-6 py-4">วัน-เวลา</th>
+                                    <th class="px-6 py-4">ผู้ทำรายการ</th>
+                                    <th class="px-6 py-4">ประเภท/รายการ</th>
+                                    <th class="px-6 py-4 text-center">จำนวน</th>
+                                    <th class="px-6 py-4">รายละเอียด/สถานะ</th>
+                                    <!-- ช่องท้ายสุดสำหรับ แอดมิน กดยืนยันปุ่ม (คืนของ) -->
+                                    <th class="px-6 py-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [ส่วนแสดงผลที่ 4.5] หน้าจอรายงานสรุป (Report) -->
+            <div id="view-report" class="view-section space-y-6 hide">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-8 print:p-0 print:border-none print:shadow-none">
+                    
+                    <!-- ส่วนควบคุมหัวตารางและการพิมพ์ (ซ่อนเมื่อพิมพ์) -->
+                    <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap items-center justify-between bg-slate-50/50 gap-4 print:hidden -mx-8 -mt-8 mb-6">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">รายงานสรุปความเคลื่อนไหวพัสดุ</h3>
+                            <p class="text-xs text-slate-500 mt-1">สรุปยอดการเบิก-ยืม ประจำระบบ (พิมพ์รายงานได้ที่นี่)</p>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-3 items-end">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">แผนก/หน่วยงาน</label>
+                                <input id="report-department" type="text" value="สถาบันประสาทวิทยา (NIT)" oninput="updateReportLabels()"
+                                    class="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-44">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">เลือกเดือน</label>
+                                <select id="report-month" onchange="renderReport()"
+                                    class="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer w-28">
+                                    <option value="0">มกราคม</option>
+                                    <option value="1">กุมภาพันธ์</option>
+                                    <option value="2">มีนาคม</option>
+                                    <option value="3">เมษายน</option>
+                                    <option value="4">พฤษภาคม</option>
+                                    <option value="5">มิถุนายน</option>
+                                    <option value="6">กรกฎาคม</option>
+                                    <option value="7">สิงหาคม</option>
+                                    <option value="8">กันยายน</option>
+                                    <option value="9">ตุลาคม</option>
+                                    <option value="10">พฤศจิกายน</option>
+                                    <option value="11">ธันวาคม</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">เลือกปี</label>
+                                <select id="report-year" onchange="renderReport()"
+                                    class="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer w-24">
+                                </select>
+                            </div>
+                            <button onclick="window.print()"
+                                class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all shadow-md shadow-emerald-100 flex items-center gap-2">
+                                <i class="fa-solid fa-print"></i> พิมพ์รายงาน (Print)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- หน้าเอกสารสำหรับพิมพ์จริง (Formal Report Printout) -->
+                    <div id="report-print-area" class="space-y-6">
+                        
+                        <!-- หัวเอกสารทางการ -->
+                        <div class="text-center space-y-2 mb-6">
+                            <h1 class="text-2xl font-bold text-slate-900 font-prompt">สถาบันประสาท (NIT)</h1>
+                            <h2 class="text-xl font-bold text-slate-800 font-prompt">สรุปรายการพัสดุและวัสดุสิ้นเปลืองประจำเดือน</h2>
+                            <div class="flex justify-center gap-12 text-sm text-slate-700 font-prompt mt-2">
+                                <span>หน่วยงาน: <span id="print-dept-label" class="border-b border-dotted border-slate-500 px-4 min-w-[150px] inline-block text-center font-bold">สถาบันประสาทวิทยา (NIT)</span></span>
+                                <span>ประจำเดือน: <span id="print-period-label" class="border-b border-dotted border-slate-500 px-4 min-w-[150px] inline-block text-center font-bold">พฤษภาคม 2569</span></span>
+                            </div>
+                        </div>
+
+                        <!-- ตารางพัสดุแบบทางการ -->
+                        <div class="overflow-x-auto border border-slate-300 rounded-xl mt-4">
+                            <table class="w-full text-xs border-collapse">
+                                <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-300">
+                                    <tr class="text-center divide-x divide-slate-300">
+                                        <th class="px-1 py-3 w-10">ลำดับ</th>
+                                        <th class="px-2 py-3 text-left w-64">รายการ</th>
+                                        <th class="px-1 py-3">รหัส</th>
+                                        <th class="px-1 py-3">หน่วย</th>
+                                        <th class="px-1 py-3">ราคา/หน่วย</th>
+                                        <th class="px-1 py-3">ยอดเหลือจากเดือน (A)</th>
+                                        <th class="px-1 py-3">รับเข้าเพิ่ม (B)</th>
+                                        <th class="px-1 py-3">ใช้ไปในเดือน (C)</th>
+                                        <th class="px-1 py-3">คงเหลือสิ้นเดือน (A+B-C)</th>
+                                        <th class="px-2 py-3">มูลค่าคงเหลือ (ราคา * คงเหลือ)</th>
+                                        <th class="px-2 py-3">หมายเหตุ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-official-body" class="divide-y divide-slate-200 text-center divide-x divide-slate-200">
+                                    <!-- ข้อมูลพัสดุจะถูกวาดที่นี่ด้วย JavaScript -->
+                                </tbody>
+                                <tfoot class="bg-slate-50 font-bold border-t border-slate-300">
+                                    <tr class="divide-x divide-slate-200 text-right">
+                                        <td colspan="9" class="px-4 py-3 text-right">รวมมูลค่าทั้งหมด:</td>
+                                        <td id="report-total-value" class="px-4 py-3 text-center text-slate-900 font-bold">0.00</td>
+                                        <td class="px-4 py-3 text-center">บาท</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- สรุปภาพรวมด้านล่าง -->
+                        <div class="mt-8 space-y-2 border border-slate-300 rounded-xl p-4 bg-slate-50/30 page-break-inside-avoid">
+                            <h3 class="font-bold text-slate-800 mb-2">สรุปภาพรวม</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                <div class="p-3 bg-white rounded-lg border border-slate-200">
+                                    <span class="text-slate-500 font-medium">รายการที่ถูกใช้มากที่สุด คือ</span>
+                                    <div id="report-most-used" class="font-bold text-slate-800 mt-1">-</div>
+                                </div>
+                                <div class="p-3 bg-white rounded-lg border border-slate-200">
+                                    <span class="text-slate-500 font-medium">รายการที่ถูกใช้น้อยที่สุด คือ</span>
+                                    <div id="report-least-used" class="font-bold text-slate-800 mt-1">-</div>
+                                </div>
+                                <div class="p-3 bg-white rounded-lg border border-slate-200 border-l-4 border-l-red-500">
+                                    <span class="text-slate-500 font-medium">รายการที่ต้องการซื้อเพิ่มเร่งด่วน คือ</span>
+                                    <div id="report-urgent-buy" class="font-bold text-red-600 mt-1">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ส่วนผู้รับผิดชอบลงนาม -->
+                        <div class="mt-12 pt-6 grid grid-cols-2 gap-12 text-center text-xs font-semibold text-slate-700 page-break-inside-avoid">
+                            <div class="space-y-12">
+                                <div class="h-6"></div> <!-- ที่สำหรับเซ็น -->
+                                <div class="space-y-2">
+                                    <div>...........................................................................</div>
+                                    <div>(...........................................................................)</div>
+                                    <div class="text-[10px] text-slate-500">ผู้ตรวจสอบ / ผู้จัดทำ</div>
+                                </div>
+                            </div>
+                            <div class="space-y-12">
+                                <div class="h-6"></div> <!-- ที่สำหรับเซ็น -->
+                                <div class="space-y-2">
+                                    <div>...........................................................................</div>
+                                    <div>(...........................................................................)</div>
+                                    <div class="text-[10px] text-slate-500">ผู้อนุมัติ</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- [ส่วนแสดงผลที่ 5] หน้าสำหรับ Super Admin: การจัดการผู้ใช้งาน -->
+            <div id="view-users" class="view-section space-y-6 hide">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">จัดการบัญชีผู้ใช้งาน</h3>
+                            <p class="text-xs text-slate-500 mt-1">เพิ่ม/ลบ พนักงาน และกำหนดสิทธิ์การเข้าถึงระบบ</p>
+                        </div>
+                        <button onclick="openUserModal()"
+                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-all shadow-md shadow-indigo-100 flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i> เพิ่มพนักงานใหม่
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold tracking-wide">
+                                <tr>
+                                    <th class="px-6 py-4">ชื่อ - นามสกุล</th>
+                                    <th class="px-6 py-4">อีเมล</th>
+                                    <th class="px-6 py-4 text-center">สิทธิ์ (Role)</th>
+                                    <th class="px-6 py-4">วันที่สมัคร</th>
+                                    <th class="px-6 py-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-slate-100 italic text-slate-400">
+                                <!-- ข้อมูลพนักงานจะถูกโหลดเข้าด้วย JavaScript -->
+                                <tr>
+                                    <td colspan="5" class="py-10 text-center">กำลังโหลดข้อมูลพนักงาน...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [ส่วนแสดงผลที่ 6] ตู้จดหมายคำขออนุมัติ (Approval Inbox) (NEW) -->
+            <div id="view-approvals" class="view-section space-y-6 hide">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">คำขอเบิกพัสดุ (รอการอนุมัติ)</h3>
+                            <p class="text-xs text-slate-500 mt-1">รายการที่พนักงานส่งมาเพื่อขออนุมัติตัดสต็อกจริง</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4">วันที่/เลขที่</th>
+                                    <th class="px-6 py-4">ผู้ขอเบิก</th>
+                                    <th class="px-6 py-4">รายการสินค้า</th>
+                                    <th class="px-6 py-4 text-center">สถานะ</th>
+                                    <th class="px-6 py-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="approval-table-body" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="5" class="py-20 text-center text-slate-400 italic">
+                                        ไม่มีรายการที่รอการอนุมัติในขณะนี้</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- กล่องลอยดักหน้าจอ (MODAL) ฟอร์มเอาไว้แอดของเข้าคลัง -->
+    <!-- ============================================== -->
+
+    <!-- ใช้ CSS fixed ดึงคลุมทับทั้งเว็บ ทำให้พื้นที่กดเบลอหลัง -->
+    <div id="modal-add"
+        class="hide fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+
+        <!-- กล่องกระดาษสีขาวตัวเครื่องมือ -->
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-box-open text-blue-500"></i>
+                    เพิ่มรายการพัสดุ/ครุภัณฑ์</h3>
+                <!-- ปุ่มกากบาท สั่งปิดให้มันมุดกลับ -->
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-700"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- ฟอร์มสร้างพัสดุ (อัดข้อมูลตั้งต้นทั้งหมดลง Array Data) -->
+            <form id="form-add-item" onsubmit="handleAddItem(event)" class="p-6 overflow-y-auto space-y-4">
+
+                <!-- ส่วนสำหรับเลือกว่าเป็น วัสดุ หรือ ครุภัณฑ์ -->
+                <div class="flex gap-4 p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 mb-2">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="radio" name="add-type" value="consumable" checked
+                            class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <span
+                            class="text-sm font-bold text-slate-600 group-hover:text-blue-600 transition-colors">วัสดุสิ้นเปลือง</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="radio" name="add-type" value="asset"
+                            class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                        <span
+                            class="text-sm font-bold text-slate-600 group-hover:text-indigo-600 transition-colors">ครุภัณฑ์</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสพัสดุ</label>
+                        <input id="add-id" type="text" required
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="ID-001">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อรายการ</label>
+                        <input id="add-name" type="text" required
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่</label>
+                    <input id="add-cat" type="text" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        placeholder="เช่น ยา, เวชภัณฑ์, เครื่องใช้">
+                </div>
+
+                <!-- ระบบหน่วยนับ (Units) มาตรฐานโรงพยาบาล -->
+                <div class="bg-blue-50/50 p-4 border border-blue-100 rounded-xl space-y-3">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-blue-600 mb-1 uppercase">หน่วยใหญ่ (เช่น กล่อง, แพ็ค)</label>
+                            <input id="add-unit-large" type="text" required oninput="updateUnitPreview()"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="กล่อง">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-blue-600 mb-1 uppercase">หน่วยย่อย (เช่น ชิ้น, อัน)</label>
+                            <input id="add-unit-small" type="text" required oninput="updateUnitPreview()"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="ชิ้น">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-blue-600 mb-1 uppercase">อัตราบรรจุต่อหน่วยใหญ่</label>
+                            <input id="add-unit-ratio" type="number" required min="1" oninput="updateUnitPreview()"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" value="1">
+                        </div>
+                    </div>
+                    <div id="unit-preview-text" class="text-xs text-blue-700 bg-white/80 px-3 py-1.5 rounded-lg border border-blue-100 font-medium">
+                        💡 ตัวอย่าง: 1 กล่อง บรรจุ 1 ชิ้น
+                    </div>
+                </div>
+
+                <!-- กำหนดเรื่องตัวเลขในสต็อก -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">จำนวนเริ่มต้น</label>
+                        <input id="add-stock" type="number" min="0" required
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">จุดเตือนต่ำ</label>
+                        <input id="add-min" type="number" min="0" required
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ราคา/หน่วย (บาท)</label>
+                        <input id="add-price" type="number" min="0" step="any" required value="0"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                    <button type="button" onclick="closeAddModal()"
+                        class="px-4 py-2 font-medium text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">ยกเลิก</button>
+                    <button type="submit"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors">บันทึกรายการ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- กล่อง MODAL สำหรับเพิ่มผู้ใช้งานใหม่ (Super Admin) -->
+    <!-- ============================================== -->
+    <div id="modal-user"
+        class="hide fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-user-shield text-indigo-500"></i>
+                    บันทึกข้อมูลพนักงานใหม่</h3>
+                <button onclick="closeUserModal()" class="text-slate-400 hover:text-slate-700"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <form id="form-add-user" onsubmit="handleCreateUser(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ - นามสกุลจริง</label>
+                    <input id="new-user-name" type="text" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        placeholder="ระบุชื่อพนักงาน">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">อีเมล (ใช้เป็น ID ล็อกอิน)</label>
+                    <input id="new-user-email" type="email" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        placeholder="name@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสผ่านชั่วคราว (6
+                        ตัวขึ้นไป)</label>
+                    <input id="new-user-pass" type="password" required minlength="6"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">กำหนดระดับสิทธิ์</label>
+                    <select id="new-user-role" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                        <option value="user">User (พยาบาล/ผู้ใช้ทั่วไป)</option>
+                        <option value="admin">Admin (ผู้ดูแลคลัง)</option>
+                        <option value="superadmin">Super Admin (ผู้ควบคุมสูงสุด)</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                    <button type="button" onclick="closeUserModal()"
+                        class="px-4 py-2 font-medium text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">ยกเลิก</button>
+                    <button type="submit"
+                        class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors">สร้างบัญชี</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- หน้าจอ LOGIN และ REGISTER ถูกรวมกลับมาไว้ที่นี่เพื่อให้ใช้งานหน้าเดียวได้ -->
+    <!-- ============================================================== -->
+    <div id="auth-screen"
+        class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4 transition-opacity duration-300">
+        <!-- พื้นหลังสวยงาม -->
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-800 to-indigo-900 opacity-90"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <!-- Header กล่องล็อกอิน -->
+            <div class="p-8 pb-6 text-center border-b border-slate-100">
+                <i class="fa-solid fa-brain text-4xl text-indigo-600 mb-3 block"></i>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">NIT System</h2>
+                <p class="text-xs font-bold text-indigo-500 mt-1 uppercase tracking-widest">Neurological Institute of
+                    Thailand</p>
+                <p class="text-sm text-slate-500 font-medium mt-2">กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
+            </div>
+
+            <div class="p-8 pt-6">
+                <!-- ======================== -->
+                <!-- 1. โค้ดส่วนหน้าต่างเข้าสู่ระบบ (LOGIN) -->
+                <!-- ======================== -->
+                <!-- หากต้องการแก้สีปุ่ม, คำพูดล็อกอิน ให้แก้ในกรอบ form-login นี้ -->
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">อีเมลผู้ใช้งาน</label>
+                        <input id="login-email" type="email" required placeholder="doctor@hospital.com"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all font-medium">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">รหัสผ่าน</label>
+                        <input id="login-password" type="password" required placeholder="••••••••"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all font-medium">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all mt-2">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบ
+                    </button>
+                    <p class="text-center text-sm text-slate-500 mt-4">
+                        ยังไม่มีบัญชีใช่หรือไม่? <a href="#" onclick="toggleAuthMode('register')"
+                            class="text-indigo-600 font-bold hover:underline">สมัครสมาชิก</a>
+                    </p>
+                </form>
+
+                <!-- ======================== -->
+                <!-- 2. โค้ดส่วนหน้าต่างสมัครสมาชิก (REGISTER) -->
+                <!-- ======================== -->
+                <!-- หากต้องการแก้กล่องรับชื่อ, รหัสผ่านตอนสมัคร ให้แก้ในกรอบ form-register นี้ -->
+                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hide">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">ชื่อ -
+                            นามสกุลจริง</label>
+                        <input id="reg-name" type="text" required placeholder="พญ. สมหญิง รักษาดี"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all font-medium">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">อีเมลสำหรับใช้ล็อกอิน</label>
+                        <input id="reg-email" type="email" required placeholder="doctor@hospital.com"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">ตั้งรหัสผ่าน
+                            (6 ตัวขึ้นไป)</label>
+                        <input id="reg-password" type="password" required minlength="6" placeholder="••••••••"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all font-medium">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition-all mt-2">
+                        <i class="fa-solid fa-user-plus mr-2"></i> ลงทะเบียนใช้งาน
+                    </button>
+                    <p class="text-center text-sm text-slate-500 mt-4">
+                        มีบัญชีอยู่แล้ว? <a href="#" onclick="toggleAuthMode('login')"
+                            class="text-slate-700 font-bold hover:underline">กลับไปเข้าสู่ระบบ</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- กล่อง MODAL สำหรับดูประวัติพัสดุรายตัว (Stock Card) -->
+    <!-- ============================================== -->
+    <div id="modal-stock-card"
+        class="hide fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div>
+                    <h3 id="card-product-name" class="font-bold text-lg text-slate-800">ชื่อรายการพัสดุ</h3>
+                    <p id="card-product-id"
+                        class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">ID: XXX-XXXX</p>
+                </div>
+                <button onclick="closeStockCard()" class="text-slate-400 hover:text-slate-700 transition-colors"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-0 overflow-auto bg-white">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-6 py-4">วัน/เวลา</th>
+                            <th class="px-6 py-4">ผู้ดำเนินการ</th>
+                            <th class="px-6 py-4">ประเภท</th>
+                            <th class="px-6 py-4 text-center">จำนวน</th>
+                            <th class="px-6 py-4 text-center">เลขใบเบิก</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-card-body" class="divide-y divide-slate-50">
+                        <!-- ประวัติจะถูกโหลดที่นี่ -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                <div id="card-current-stock" class="text-xs font-bold text-slate-600">คงเหลือในคลังปัจจุบัน: -</div>
+                <button onclick="closeStockCard()"
+                    class="px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-colors">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- โหลดสคริปต์ที่จัดการตรรกะระบบทั้งหมดที่เราแยกส่วนประกอบไว้ (โหลดตามลำดับความสำคัญ) -->
+    <!-- 1. โหลด Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- 2. โหลดไฟล์ตั้งค่า Firebase และสคริปต์ของระบบ (ใส่ ?v= เพื่อบังคับล้าง Cache) -->
+    <script src="assets/js/firebase-config.js?v=3"></script>
+    <script src="assets/js/state.js?v=3"></script>
+    <script src="assets/js/nav.js?v=3"></script>
+    <script src="assets/js/render.js?v=3"></script>
+    <script src="assets/js/auth.js?v=3"></script>
+    <script src="assets/js/users.js?v=3"></script>
+    <script src="assets/js/import.js?v=3"></script>
+    <script src="assets/js/actions.js?v=3"></script>
+    <!-- ================= MODAL: นำเข้าข้อมูล (IMPORT) ================= -->
+    <div id="modal-import" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] hide p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+            <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-file-import text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold">นำเข้าข้อมูลพัสดุ</h2>
+                        <p class="text-[10px] opacity-70 uppercase tracking-widest">Support Excel (.xlsx, .xls) and CSV</p>
+                    </div>
+                </div>
+                <button onclick="closeImportModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-8 space-y-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest">1. เลือกหมวดหมู่หลัก (ถ้าในไฟล์ไม่มีระบุ)</label>
+                    <select id="import-cat" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="ทั่วไป">ทั่วไป (General)</option>
+                        <option value="สำนักงาน">สำนักงาน (Office)</option>
+                        <option value="งานบ้านงานครัว">งานบ้านงานครัว (Housekeeping)</option>
+                        <option value="คอมพิวเตอร์">คอมพิวเตอร์ (Computer)</option>
+                        <option value="เวชภัณฑ์">เวชภัณฑ์ (Medical)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest">2. เลือกไฟล์เอกสาร</label>
+                    <div class="relative group">
+                        <input type="file" id="import-file" accept=".xlsx,.xls,.csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center group-hover:border-indigo-400 transition-all bg-slate-50 group-hover:bg-indigo-50">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 group-hover:text-indigo-500 mb-3 block"></i>
+                            <span class="text-sm text-slate-400 group-hover:text-indigo-600 font-medium">คลิกเพื่อเลือกไฟล์ หรือลากมาวาง</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="import-status"></div>
+
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeImportModal()" class="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-all">ยกเลิก</button>
+                    <button onclick="handleImport()" class="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                        เริ่มนำเข้าข้อมูล
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 📝 Modal แก้ไขข้อมูลพัสดุ (Edit Product) -->
+    <div id="modal-edit" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center hide p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-pen-to-square text-2xl"></i>
+                    <div>
+                        <h2 class="font-bold">แก้ไขข้อมูลพัสดุ</h2>
+                        <p class="text-[10px] opacity-70 uppercase tracking-widest">Update Product Details</p>
+                    </div>
+                </div>
+                <button onclick="closeEditModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="form-edit-item" onsubmit="handleUpdateProduct(event)" class="p-6 space-y-4">
+                <input type="hidden" id="edit-dbid">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-widest">ชื่อรายการพัสดุ</label>
+                        <input type="text" id="edit-name" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-widest">รหัสวัสดุ (ID)</label>
+                        <input type="text" id="edit-id" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-widest">หมวดหมู่</label>
+                        <select id="edit-cat" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="สำนักงาน">สำนักงาน</option>
+                            <option value="งานบ้านงานครัว">งานบ้านงานครัว</option>
+                            <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
+                            <option value="เวชภัณฑ์">เวชภัณฑ์</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                        <label class="block text-center text-[13px] font-black text-indigo-600 mb-3 uppercase tracking-widest">📦 จัดการสต็อกปัจจุบัน</label>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1">
+                                <label class="block text-[10px] text-indigo-400 font-bold mb-1">จำนวนคงเหลือ</label>
+                                <input type="number" id="edit-stock" class="w-full px-4 py-3 rounded-xl bg-white border-2 border-indigo-200 text-indigo-700 font-black text-lg focus:ring-0 focus:border-indigo-500 text-center" required>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-[10px] text-indigo-400 font-bold mb-1">หน่วยนับ</label>
+                                <input type="text" id="edit-unit-small" class="w-full px-4 py-3 rounded-xl bg-white border-2 border-indigo-200 text-indigo-700 font-bold focus:ring-0 focus:border-indigo-500 text-center" required>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-[10px] text-indigo-400 font-bold mb-1">ราคา/หน่วย</label>
+                                <input type="number" id="edit-price" min="0" step="any" class="w-full px-4 py-3 rounded-xl bg-white border-2 border-indigo-200 text-indigo-700 font-bold focus:ring-0 focus:border-indigo-500 text-center" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-indigo-200 active:scale-95">
+                        <i class="fa-solid fa-save mr-2"></i> บันทึกการเปลี่ยนแปลง
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

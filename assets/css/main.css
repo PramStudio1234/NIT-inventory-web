@@ -1,0 +1,163 @@
+/* 
+  โฟลเดอร์ assets/css
+  ไฟล์: main.css
+  หน้าที่: ตกแต่งความสวยงามของเว็บไซต์ในส่วนที่ไม่สามารถทำได้ด้วย Tailwind CSS 
+*/
+
+/* 
+  ตั้งค่าฟอนต์เริ่มต้นสำหรับเว็บไซต์ทั้งหมด 
+*/
+body {
+    /* ใช้ฟอนต์ 'Prompt' จาก Google Fonts เพื่อให้อ่านง่ายเป็นภาษาไทย */
+    font-family: 'Prompt', sans-serif;
+}
+
+/* 
+  คลาสช่วยออกแบบกระจกฝ้า (Glassmorphism effect) 
+  ใช้ประดับตรงเมนูด้านบนให้ดูพรีเมียม
+*/
+.glass {
+    /* พื้นหลังสีขาวแบบโปร่งแสง 95% */
+    background: rgba(255, 255, 255, 0.95);
+    /* เอฟเฟกต์เบลอพื้นหลังที่อยู่ด้านหลังแท็กนี้ 10px */
+    backdrop-filter: blur(10px);
+}
+
+/* 
+  คลาสหลักสำหรับซ่อนวัตถุต่างๆ บนหน้าเว็บแบบเด็ดขาด 
+  (อัด !important กันโดนคลาสอื่นทับ)
+*/
+.hide {
+    display: none !important;
+}
+
+/* =========================================
+   ตรรกะซ่อน/เปิดเผยอ็อปเจ็กต์ตาม Role สิทธิ์ 
+   (Role Visibility Logic)
+   ========================================= */
+
+/* 
+  1. ถ้า Body มีคลาส role-is-user (กำลังล็อกอินเป็นนักเบิกของ)
+  ให้สั่งซ่อนแท็กทุกอันที่มีคลาส .role-admin และ .role-superadmin ทิ้งไปเลย
+*/
+body.role-is-user .role-admin,
+body.role-is-user .role-superadmin {
+    display: none !important;
+}
+
+/* 
+  2. ถ้า Body มีคลาส role-is-admin (กำลังล็อกอินเป็นคนเฝ้าคลัง)
+  ให้สั่งซ่อนแท็กฟังก์ชันขั้นสูงของซุปเปอร์แอดมิน (.role-superadmin)
+  และซ่อนเมนูของคนฝั่งพนักงานทั่วไป (.role-user) ทิ้งไป
+*/
+body.role-is-admin .role-superadmin,
+body.role-is-admin .role-user {
+    display: none !important;
+}
+
+/* 
+  3. ถ้า Body มีคลาส role-is-superadmin (เจ้าของระบบทำได้ทุกอย่าง)
+  ให้ซ่อนเฉพาะเมนูที่เป็นฝั่ง User ก็พอ (เพราะคนเฝ้าระบบไม่ต้องมายืมของเองผ่านหน้านี้)
+*/
+body.role-is-superadmin .role-user {
+    display: none !important;
+}
+
+/* =========================================
+   การตั้งค่าสำหรับการพิมพ์รายงาน (Print Mode)
+   ========================================= */
+@media print {
+    /* 1. ซ่อนทุกอย่างที่ไม่ใช่เนื้อหาหลัก (เมนูข้าง, หัวเว็บ) */
+    aside, header, nav, .print\:hidden, .print\:hide {
+        display: none !important;
+    }
+
+    /* 2. รีเซ็ตความสูงและการเลื่อน (Overflow) เพื่อรองรับการพิมพ์หลายหน้า */
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+        background: white !important;
+    }
+
+    /* 3. บังคับให้เนื้อหาหลัก (Main) ขยายเต็มหน้ากระดาษและเลื่อนได้ปกติ */
+    main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    /* รีเซ็ตความสูงและ overflow ของ container เลื่อนข้อมูลหลัก */
+    .flex-1.overflow-y-auto {
+        overflow: visible !important;
+        height: auto !important;
+        padding: 0 !important;
+    }
+
+    /* 4. ลบเงาและขอบตารางบางส่วนออกเพื่อให้ประหยัดหมึกพิมพ์ */
+    .bg-white {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* 5. ปรับขนาดตัวอักษรและแบบฟอนต์ให้ตรงกับ Angsana New สำหรับการพิมพ์รายงาน */
+    body {
+        background: white !important;
+    }
+
+    #report-print-area {
+        font-family: 'Angsana New', 'AngsanaUPC', 'Sarabun', 'Prompt', sans-serif !important;
+        font-size: 16pt !important; /* ขนาดฟอนต์มาตรฐานรายงานราชการไทย */
+        line-height: 1.25 !important;
+        color: black !important;
+    }
+
+    #report-print-area h1 {
+        font-size: 22pt !important;
+        font-weight: bold !important;
+    }
+
+    #report-print-area h2 {
+        font-size: 18pt !important;
+        font-weight: bold !important;
+    }
+
+    #report-print-area h3 {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+    }
+
+    #report-print-area table {
+        font-size: 14pt !important; /* ตารางใช้ขนาด 14pt เพื่อความพอดี */
+    }
+
+    /* สั่งให้ช่องรายงานสรุปโชว์ขึ้นมาเด่นๆ และซ่อนส่วนอื่น */
+    .view-section {
+        display: none !important;
+    }
+    #view-report {
+        display: block !important;
+    }
+
+    /* ตารางพิมพ์รายงานเป็นเส้นขอบเข้มชัดเจน */
+    #report-print-area table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    #report-print-area th, #report-print-area td {
+        border: 1px solid #94a3b8 !important;
+        padding: 4px 6px !important;
+        color: black !important;
+    }
+    #report-print-area thead {
+        background-color: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .page-break-inside-avoid {
+        page-break-inside: avoid !important;
+    }
+}
