@@ -143,11 +143,28 @@ function returnAsset(logDbId) {
 // ================= ADMIN ACTIONS ================= //
 
 function deleteLog(logDbId) {
-    if (currentRole !== 'superadmin') {
-        alert('คุณไม่มีสิทธิ์ลบประวัติ เฉพาะ Super Admin เท่านั้น');
+    if (currentRole !== 'superadmin' && currentRole !== 'user') {
+        alert('คุณไม่มีสิทธิ์ลบประวัติ เฉพาะ Super Admin หรือ User เจ้าของรายการเท่านั้น');
         return;
     }
-    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบประวัตินี้? ข้อมูลนี้จะถูกลบออกจากรายงานด้วย')) {
+    
+    // ดึงข้อมูลผู้ทำรายการเพื่อตรวจสอบสิทธิ์ของ User
+    let logOwner = '';
+    if (logDbId && logDbId.includes('_')) {
+        const slipDbId = logDbId.split('_')[0];
+        const slip = slips.find(s => s.dbId === slipDbId);
+        if (slip) logOwner = slip.requester;
+    } else {
+        const logEntry = logs.find(l => l.dbId === logDbId);
+        if (logEntry) logOwner = logEntry.user;
+    }
+
+    if (currentRole === 'user' && logOwner !== currentUser) {
+        alert('คุณไม่มีสิทธิ์ลบประวัติของผู้อื่น');
+        return;
+    }
+
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบประวัตินี้?')) {
         if (!checkFirebaseSetup()) return;
         
         if (logDbId && logDbId.includes('_')) {
@@ -164,6 +181,48 @@ function deleteLog(logDbId) {
                 alert('เกิดข้อผิดพลาดในการลบ: ' + err);
             });
         }
+    }
+}
+
+function clearMyLogs() {
+    if (currentRole !== 'user') {
+        alert('ฟังก์ชันนี้สำหรับสมาชิกทั่วไปเท่านั้น');
+        return;
+    }
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการ "ล้างประวัติการทำรายการทั้งหมดของคุณ"?\nข้อมูลประวัติและคำขอทั้งหมดของคุณจะถูกลบและไม่สามารถกู้คืนได้!')) {
+        if (!checkFirebaseSetup()) return;
+
+        const p1 = db.collection('logs').where('user', '==', currentUser).get().then(snapshot => {
+            const docs = snapshot.docs;
+            const batches = [];
+            for (let i = 0; i < docs.length; i += 400) {
+                const batch = db.batch();
+                docs.slice(i, i + 400).forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                batches.push(batch.commit());
+            }
+            return Promise.all(batches);
+        });
+
+        const p2 = db.collection('slips').where('requester', '==', currentUser).get().then(snapshot => {
+            const docs = snapshot.docs;
+            const batches = [];
+            for (let i = 0; i < docs.length; i += 400) {
+                const batch = db.batch();
+                docs.slice(i, i + 400).forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                batches.push(batch.commit());
+            }
+            return Promise.all(batches);
+        });
+
+        Promise.all([p1, p2]).then(() => {
+            alert('ล้างประวัติการทำรายการของคุณเรียบร้อยแล้ว');
+        }).catch(err => {
+            alert('เกิดข้อผิดพลาดในการล้างประวัติ: ' + err);
+        });
     }
 }
 

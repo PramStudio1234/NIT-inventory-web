@@ -591,7 +591,7 @@ function renderLogs() {
             statusHTML = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded border border-emerald-100">อนุมัติแล้วผ่าน</span>`;
         }
 
-        if (currentRole === 'superadmin') {
+        if (currentRole === 'superadmin' || currentRole === 'user') {
             actions.push(`<button onclick="deleteLog('${l.dbId}')" title="ลบประวัติ" class="p-1.5 text-slate-300 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can text-sm"></i></button>`);
         }
 
