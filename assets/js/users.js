@@ -43,7 +43,7 @@ function renderUsersTable() {
     }
 
     tbody.innerHTML = usersList.map(u => {
-        const date = u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString('th-TH') : '-';
+        const date = formatUserDate(u.createdAt);
         const roleColor = u.role === 'superadmin' ? 'bg-purple-100 text-purple-600' : (u.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500');
         
         return `
@@ -172,4 +172,22 @@ async function deleteUserAccount(uid, name) {
     } catch (error) {
         alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Server: ' + error.message);
     }
+}
+
+// ฟังก์ชันช่วยจัดรูปแบบวันที่สมัครให้รองรับทั้ง Firestore Timestamp และ String ISO
+function formatUserDate(createdAt) {
+    if (!createdAt) return '-';
+    // กรณีเป็น Firestore Timestamp
+    if (createdAt.seconds !== undefined) {
+        return new Date(createdAt.seconds * 1000).toLocaleDateString('th-TH');
+    }
+    if (createdAt._seconds !== undefined) {
+        return new Date(createdAt._seconds * 1000).toLocaleDateString('th-TH');
+    }
+    // กรณีเป็น ISO string หรือ Date Object
+    const date = new Date(createdAt);
+    if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('th-TH');
+    }
+    return '-';
 }

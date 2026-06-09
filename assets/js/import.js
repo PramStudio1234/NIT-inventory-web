@@ -60,3 +60,15 @@ async function handleImport() {
         statusDiv.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100">❌ เกิดข้อผิดพลาด: ${err.message}</div>`;
     }
 }
+
+// ฟังก์ชันดาวน์โหลดเทมเพลตไฟล์นำเข้าพัสดุ (.csv UTF-8 BOM เพื่อรองรับภาษาไทยใน Excel)
+function downloadImportTemplate() {
+    const headers = "รหัสพัสดุ,ชื่อรายการ,หมวดหมู่,จำนวนคงเหลือ,หน่วยนับ,ราคาต่อหน่วย\n";
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), headers], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "template_import_nit_inventory.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}

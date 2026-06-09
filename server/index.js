@@ -223,6 +223,9 @@ app.post('/api/import', upload.single('file'), async (req, res) => {
                 });
             }
             console.log(`✅ กรองและเตรียมข้อมูลได้สำเร็จ ${products.length} รายการ`);
+            if (products.length === 0) {
+                return res.status(400).json({ error: 'ไม่พบรายการพัสดุที่สามารถนำเข้าได้ กรุณาตรวจสอบว่ามีหัวคอลัมน์ รหัสสินค้า และ ชื่อสินค้า/รายการ ในแถวแรกของไฟล์อย่างถูกต้อง' });
+            }
         } else {
             return res.status(400).json({ error: 'รูปแบบไฟล์ไม่รองรับ (กรุณาใช้ Excel หรือ CSV)' });
         }
