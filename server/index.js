@@ -502,7 +502,7 @@ app.post('/api/slips/notify-new', async (req, res) => {
                         
                         <!-- Action Button -->
                         <div style="text-align: center; margin-top: 32px; margin-bottom: 8px;">
-                            <a href="http://localhost:3000" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; font-size: 15px; font-weight: 700; border-radius: 8px; display: inline-block; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); transition: all 0.2s;">
+                            <a href="https://opd-neuro-inventory.web.app" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; font-size: 15px; font-weight: 700; border-radius: 8px; display: inline-block; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); transition: all 0.2s;">
                                 เข้าสู่ระบบเพื่ออนุมัติใบเบิก
                             </a>
                         </div>
