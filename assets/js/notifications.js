@@ -9,7 +9,7 @@
 
 // ====== ตั้งค่า URL ของ Backend Server ======
 // เปลี่ยนเป็น URL ของ Render.com หลัง Deploy
-const MAIL_SERVER_URL = 'http://localhost:3001';
+const MAIL_SERVER_URL = 'https://nit-inventory-api.onrender.com';
 
 // ====== ข้อมูลผู้รับแจ้งเตือน (โหลดจาก Firestore) ======
 let notificationEmails = [];

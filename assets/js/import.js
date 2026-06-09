@@ -4,7 +4,7 @@
   ==============================================================
 */
 
-const MAIL_SERVER_URL = 'http://localhost:3001';
+const MAIL_SERVER_URL = 'https://nit-inventory-api.onrender.com';
 
 function openImportModal() {
     if (currentRole !== 'superadmin') {

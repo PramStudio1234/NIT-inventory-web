@@ -260,14 +260,45 @@ app.post('/api/import', upload.single('file'), async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
-// ====== Mail Transporter ======
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
+// ====== sendEmailViaBrevo Helper ======
+async function sendEmailViaBrevo(toEmails, subject, htmlContent) {
+    const brevoApiKey = process.env.BREVO_API_KEY || process.env.GMAIL_PASS; 
+    const senderEmail = process.env.GMAIL_USER || 'nit-inventory@example.com'; 
+
+    if (!brevoApiKey) {
+        throw new Error("BREVO_API_KEY or GMAIL_PASS environment variable is missing.");
     }
-});
+
+    const recipients = Array.isArray(toEmails) 
+        ? toEmails.map(email => ({ email }))
+        : [{ email: toEmails }];
+
+    const payload = {
+        sender: {
+            name: "NIT Inventory 🧠",
+            email: senderEmail
+        },
+        to: recipients,
+        subject: subject,
+        htmlContent: htmlContent
+    };
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'api-key': brevoApiKey,
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || JSON.stringify(data));
+    }
+    return data;
+}
 
 // ฟังก์ชันตรวจสอบสต็อกและส่งแจ้งเตือนอัตโนมัติ
 async function processStockAlerts(systemName) {
@@ -297,13 +328,10 @@ async function sendFormattedEmail(recipients, productList, alertType, systemName
         </li>
     `).join('');
 
-    const mailOptions = {
-        from: `"NIT Inventory 🧠" <${process.env.GMAIL_USER}>`,
-        to: recipients.join(','),
-        subject: `${alertType === 'out_of_stock' ? '⚠️ [ด่วน] สินค้าหมดสต็อก' : '🔔 [แจ้งเตือน] สินค้าใกล้หมด'} - ${systemName}`,
-        html: `<div style="font-family: sans-serif; padding: 20px;"><h2>แจ้งเตือนสินค้า</h2><ul>${productHtml}</ul></div>`
-    };
-    return transporter.sendMail(mailOptions);
+    const subject = `${alertType === 'out_of_stock' ? '⚠️ [ด่วน] สินค้าหมดสต็อก' : '🔔 [แจ้งเตือน] สินค้าใกล้หมด'} - ${systemName}`;
+    const htmlContent = `<div style="font-family: sans-serif; padding: 20px;"><h2>แจ้งเตือนสินค้า</h2><ul>${productHtml}</ul></div>`;
+
+    return sendEmailViaBrevo(recipients, subject, htmlContent);
 }
 
 // API Endpoints
@@ -315,21 +343,16 @@ app.post('/api/notifications/test', async (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
     try {
-        const mailOptions = {
-            from: `"NIT Inventory 🧠" <${process.env.GMAIL_USER}>`,
-            to: email,
-            subject: '🔔 ทดสอบระบบแจ้งเตือน - NIT Inventory',
-            html: `
-                <div style="font-family: sans-serif; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <h2 style="color: #4f46e5;">ระบบแจ้งเตือน NIT Inventory ทำงานปกติ</h2>
-                    <p>นี่คืออีเมลทดสอบที่ส่งจากเซิร์ฟเวอร์จำลองเพื่อทดสอบระบบส่งเมล</p>
-                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-                    <p style="font-size: 12px; color: #64748b;">ส่งเมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}</p>
-                </div>
-            `
-        };
+        const htmlContent = `
+            <div style="font-family: sans-serif; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h2 style="color: #4f46e5;">ระบบแจ้งเตือน NIT Inventory ทำงานปกติ</h2>
+                <p>นี่คืออีเมลทดสอบที่ส่งจากเซิร์ฟเวอร์จำลองเพื่อทดสอบระบบส่งเมล</p>
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                <p style="font-size: 12px; color: #64748b;">ส่งเมื่อ: ${new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}</p>
+            </div>
+        `;
 
-        await transporter.sendMail(mailOptions);
+        await sendEmailViaBrevo(email, '🔔 ทดสอบระบบแจ้งเตือน - NIT Inventory', htmlContent);
         res.json({ success: true });
     } catch (err) {
         console.error('Test Email Error:', err);
@@ -385,14 +408,7 @@ app.post('/api/send-alert', async (req, res) => {
             </div>
         `;
 
-        const mailOptions = {
-            from: `"NIT Inventory 🧠" <${process.env.GMAIL_USER}>`,
-            to: recipients.join(','),
-            subject: `${title} - ${systemName || 'NIT Inventory'}`,
-            html: htmlContent
-        };
-
-        await transporter.sendMail(mailOptions);
+        await sendEmailViaBrevo(recipients, `${title} - ${systemName || 'NIT Inventory'}`, htmlContent);
         res.json({ success: true });
     } catch (err) {
         console.error('Send Alert Email Error:', err);
@@ -501,14 +517,7 @@ app.post('/api/slips/notify-new', async (req, res) => {
             </div>
         `;
 
-        const mailOptions = {
-            from: `"NIT Inventory 🧠" <${process.env.GMAIL_USER}>`,
-            to: adminEmails.join(','),
-            subject: `🔔 [ขออนุมัติ] ใบเบิกใหม่เลขที่ ${slipNo} - โดยคุณ ${requester}`,
-            html: htmlContent
-        };
-
-        await transporter.sendMail(mailOptions);
+        await sendEmailViaBrevo(adminEmails, `🔔 [ขออนุมัติ] ใบเบิกใหม่เลขที่ ${slipNo} - โดยคุณ ${requester}`, htmlContent);
         res.json({ success: true, message: `Notified ${adminEmails.length} admin(s)/superadmin(s).` });
     } catch (err) {
         console.error('Notify New Slip Error:', err);
@@ -566,14 +575,7 @@ async function sendSlipStatusEmail(recipientEmail, requesterName, slipNo, status
         </div>
     `;
 
-    const mailOptions = {
-        from: `"NIT Inventory 🧠" <${process.env.GMAIL_USER}>`,
-        to: recipientEmail,
-        subject: title,
-        html: htmlContent
-    };
-
-    return transporter.sendMail(mailOptions);
+    return sendEmailViaBrevo(recipientEmail, title, htmlContent);
 }
 
 app.post('/api/slips/approve', async (req, res) => {
