@@ -149,11 +149,21 @@ function deleteLog(logDbId) {
     }
     if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบประวัตินี้? ข้อมูลนี้จะถูกลบออกจากรายงานด้วย')) {
         if (!checkFirebaseSetup()) return;
-        db.collection('logs').doc(logDbId).delete().then(() => {
-            alert('ลบประวัติรายการสำเร็จ');
-        }).catch(err => {
-            alert('เกิดข้อผิดพลาดในการลบ: ' + err);
-        });
+        
+        if (logDbId && logDbId.includes('_')) {
+            const slipDbId = logDbId.split('_')[0];
+            db.collection('slips').doc(slipDbId).delete().then(() => {
+                alert('ลบประวัติคำขอสำเร็จ');
+            }).catch(err => {
+                alert('เกิดข้อผิดพลาดในการลบคำขอ: ' + err);
+            });
+        } else {
+            db.collection('logs').doc(logDbId).delete().then(() => {
+                alert('ลบประวัติรายการสำเร็จ');
+            }).catch(err => {
+                alert('เกิดข้อผิดพลาดในการลบ: ' + err);
+            });
+        }
     }
 }
 

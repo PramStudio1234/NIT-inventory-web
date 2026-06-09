@@ -513,12 +513,39 @@ function renderLogs() {
     if (!tbody) return;
     tbody.innerHTML = ''; // ล้างก่อน
     
-    // ฟิลเตอร์ตรวจสอบสิทธิ์: 
-    // ถ้าคุณเป็นคนยืมของ (User) ให้เอาเฉพาะที่รายชื่อตรงกับคุณโชว์ หากเป็นเจ้านาย (Admin) โชว์ครบหมดไม่ต้องกรองเลย
-    const displayLogs = currentRole === 'user' ? logs.filter(l => l.user === currentUser) : logs;
+    // 1. ดึง Log จากฐานข้อมูลปกติ
+    let combinedLogs = currentRole === 'user' 
+        ? logs.filter(l => l.user === currentUser) 
+        : [...logs];
+
+    // 2. ดึงใบเบิกจาก slips ที่สถานะเป็น pending หรือ rejected
+    // ถ้าเป็น user ดึงเฉพาะของตัวเอง ถ้าเป็น admin/superadmin ดึงทั้งหมด
+    const targetSlips = currentRole === 'user'
+        ? slips.filter(s => s.requester === currentUser && (s.status === 'pending' || s.status === 'rejected'))
+        : slips.filter(s => s.status === 'pending' || s.status === 'rejected');
+
+    // 3. แปลงข้อมูลใบเบิกเหล่านั้นให้อยู่ในรูปแบบ Log เพื่อนำมาแสดงในตารางรวมกัน
+    targetSlips.forEach(s => {
+        if (s.items && Array.isArray(s.items)) {
+            s.items.forEach((item, index) => {
+                combinedLogs.push({
+                    dbId: `${s.dbId}_${index}`,
+                    timestamp: s.timestamp,
+                    user: s.requester,
+                    productId: item.productId,
+                    productName: item.productName,
+                    qty: item.qty || item.qtySmall || 0,
+                    type: item.type === 'asset' ? 'borrow' : 'withdraw',
+                    slipNo: s.slipNo,
+                    status: s.status, // 'pending' หรือ 'rejected'
+                    rejectReason: s.rejectReason || ''
+                });
+            });
+        }
+    });
     
-    // จับเรียงตามเวลาทำรายการใหม่ล่าสุด (เรียงจากเวลาเยอะมาเวลาน้อย Date Sort)
-    const sortedLogs = [...displayLogs].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // 4. จับเรียงตามเวลาทำรายการใหม่ล่าสุด (เรียงจากเวลาเยอะมาเวลาน้อย Date Sort)
+    const sortedLogs = [...combinedLogs].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
     
     // ถ้าประวัติดล่งโจ๋ง ก็โชว์ข้อความว่าไม่มีจ้า
     if (sortedLogs.length === 0) {
@@ -529,19 +556,39 @@ function renderLogs() {
     sortedLogs.forEach((l) => {
         const sDate = new Date(l.timestamp).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
         const isAsset = l.type === 'borrow';
+        const isVirtual = l.dbId && l.dbId.includes('_');
         
         let statusHTML = '';
         let actions = [];
 
-        if (l.status === 'pending' && isAsset && currentRole !== 'user') {
-            statusHTML = `<span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded border border-amber-100">ติดยืม</span>`;
-            actions.push(`<button onclick="returnAsset('${l.dbId}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold rounded-lg transition-colors shadow-sm">คืนของ</button>`);
+        if (l.status === 'pending') {
+            if (isVirtual) {
+                // คำขอเบิกที่ยังไม่ได้รับการอนุมัติ (รออนุมัติ)
+                statusHTML = `<span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded border border-amber-100">รออนุมัติ</span>`;
+            } else {
+                // ได้รับอนุมัติแล้ว และอยู่ระหว่างการยืม (อนุมัติแล้ว - ติดยืม)
+                if (isAsset) {
+                    statusHTML = `<span class="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded border border-indigo-100">อนุมัติแล้ว (ติดยืม)</span>`;
+                    if (currentRole !== 'user') {
+                        actions.push(`<button onclick="returnAsset('${l.dbId}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold rounded-lg transition-colors shadow-sm">คืนของ</button>`);
+                    }
+                } else {
+                    // ป้องกันความผิดพลาดของระบบทั่วไป
+                    statusHTML = `<span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded border border-amber-100">รออนุมัติ</span>`;
+                }
+            }
+        } else if (l.status === 'rejected') {
+            // ปฏิเสธการอนุมัติ (ไม่ผ่านอนุมัติ)
+            const reasonTip = l.rejectReason ? ` title="เหตุผล: ${l.rejectReason}"` : '';
+            statusHTML = `<span class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded border border-red-100 cursor-help"${reasonTip}>ไม่ผ่านอนุมัติ</span>`;
+            if (l.rejectReason) {
+                statusHTML += `<div class="text-[9px] text-red-400 mt-1 max-w-[150px] mx-auto truncate font-medium" title="${l.rejectReason}">เหตุผล: ${l.rejectReason}</div>`;
+            }
         } else if (l.status === 'returned') {
             statusHTML = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded border border-emerald-100">คืนแล้ว</span>`;
-        } else if (l.status === 'pending') {
-            statusHTML = `<span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded border border-amber-100">รอตรวจ</span>`;
         } else {
-            statusHTML = `<span class="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded border border-blue-100">เบิกจ่าย</span>`;
+            // อนุมัติแล้วผ่าน
+            statusHTML = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded border border-emerald-100">อนุมัติแล้วผ่าน</span>`;
         }
 
         if (currentRole === 'superadmin') {
