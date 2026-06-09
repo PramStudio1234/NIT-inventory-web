@@ -146,7 +146,7 @@ app.post('/api/import', upload.single('file'), async (req, res) => {
                         const cleanKey = key.trim();
                         const cleanVal = val.replace(/,/g, '');
 
-                        if (cleanKey === 'รหัส' || cleanKey === 'รหัสสินค้า' || cleanKey.toLowerCase() === 'id' || cleanKey.toLowerCase() === 'code') {
+                        if (cleanKey === 'รหัส' || cleanKey === 'รหัสสินค้า' || cleanKey === 'รหัสพัสดุ' || cleanKey.toLowerCase() === 'id' || cleanKey.toLowerCase() === 'code') {
                             id = val;
                         }
                         if (cleanKey === 'รายการ' || cleanKey === 'ชื่อรายการ' || cleanKey === 'ชื่อสินค้า' || cleanKey.toLowerCase() === 'name' || cleanKey.toLowerCase() === 'title') {
@@ -155,10 +155,10 @@ app.post('/api/import', upload.single('file'), async (req, res) => {
                         if (cleanKey === 'หน่วย' || cleanKey === 'หน่วยนับ' || cleanKey.toLowerCase() === 'unit' || cleanKey.toLowerCase() === 'units') {
                             unit = val;
                         }
-                        if (cleanKey === 'สต็อก' || cleanKey === 'คงเหลือ' || cleanKey === 'จำนวน' || cleanKey === 'จำนวนคงเหลือ' || cleanKey.toLowerCase() === 'stock' || cleanKey.toLowerCase() === 'qty' || cleanKey.toLowerCase() === 'quantity') {
+                        if (cleanKey === 'สต็อก' || cleanKey === 'คงเหลือ' || cleanKey === 'จำนวน' || cleanKey === 'จำนวนคงเหลือ' || cleanKey === 'จำนวนคงเหลือในคลัง' || cleanKey.toLowerCase() === 'stock' || cleanKey.toLowerCase() === 'qty' || cleanKey.toLowerCase() === 'quantity') {
                             stock = Number(val) || 0;
                         }
-                        if (cleanKey === 'ราคา' || cleanKey === 'ราคา/หน่วย' || cleanKey === 'ราคาต่อหน่วย' || cleanKey.toLowerCase() === 'price' || cleanKey.toLowerCase() === 'rate') {
+                        if (cleanKey === 'ราคา' || cleanKey === 'ราคา/หน่วย' || cleanKey === 'ราคาต่อหน่วย' || cleanKey === 'ราคาต่อหน่วย(บาท)' || cleanKey.toLowerCase() === 'price' || cleanKey.toLowerCase() === 'rate') {
                             price = Number(cleanVal) || 0;
                         }
                     });
