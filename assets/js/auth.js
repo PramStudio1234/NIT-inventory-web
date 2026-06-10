@@ -33,7 +33,7 @@ function handleLogin(e) {
     });
 }
 
-// 2. ตอบสนองต่อปุ่ม Register (สร้างสมาชิกใหม่จะเป็นระดับ user เสมอ)
+// 2. ตอบสนองต่อปุ่ม Register (สร้างสมาชิกใหม่จะเป็นระดับ user เสมอ ยกเว้นใส่คีย์พิเศษแอดมิน)
 function handleRegister(e) {
     e.preventDefault();
     if (!checkFirebaseSetup()) return;
@@ -41,6 +41,14 @@ function handleRegister(e) {
     const email = document.getElementById('reg-email').value;
     const pass = document.getElementById('reg-password').value;
     const name = document.getElementById('reg-name').value;
+    const adminKey = document.getElementById('reg-admin-key').value.trim();
+
+    let resolvedRole = 'user';
+    if (adminKey === 'NIT-SUPERADMIN-2026') {
+        resolvedRole = 'superadmin';
+    } else if (adminKey === 'NIT-ADMIN-2026') {
+        resolvedRole = 'admin';
+    }
 
     // สร้างบัญชีใน Authentication
     firebase.auth().createUserWithEmailAndPassword(email, pass)
@@ -50,13 +58,14 @@ function handleRegister(e) {
         return db.collection('users').doc(user.uid).set({
             name: name,
             email: email,
-            role: 'user', // ค่าตั้งต้น บังคับเป็นแค่คนยืมของ
+            role: resolvedRole,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
     })
     .then(() => {
         document.getElementById('form-register').reset();
-        alert('สมัครสมาชิกสำเร็จ! โปรดเข้าสู่ระบบ');
+        const roleMsg = resolvedRole !== 'user' ? `ในระดับสิทธิ์ ${resolvedRole.toUpperCase()}` : '';
+        alert(`สมัครสมาชิกสำเร็จ${roleMsg}! โปรดเข้าสู่ระบบ`);
         toggleAuthMode('login'); // เด้งกลับไปหน้าล็อกอิน
     })
     .catch((error) => {
