@@ -61,16 +61,11 @@ async function handleImport() {
     }
 }
 
-// ฟังก์ชันดาวน์โหลดเทมเพลตไฟล์นำเข้าพัสดุ (.csv UTF-8 BOM เพื่อรองรับภาษาไทยใน Excel)
+// ฟังก์ชันดาวน์โหลดแบบฟอร์มตัวอย่างนำเข้าพัสดุ (.xlsx)
 function downloadImportTemplate() {
-    const headers = "ลำดับที่,รหัสพัสดุ,รายการ,จำนวนคงเหลือในคลัง,หน่วยนับ,ราคาต่อหน่วย(บาท)\n" +
-                    "1,1490,ใบมีดผ่าตัดพร้อมด้ามเบอร์ 11,13,อัน,10.7\n" +
-                    "2,1491,ด้ามมีดผ่าตัดเบอร์ 3,10,อัน,256.8\n" +
-                    "3,1502,สายยางรัดห้ามเลือด,15,เส้น,35.0\n";
-    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), headers], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", "เทมเพลตนำเข้าพัสดุ.csv");
+    link.href = "แบบฟอร์มตัวอย่าง.xlsx";
+    link.setAttribute("download", "แบบฟอร์มตัวอย่าง.xlsx");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
