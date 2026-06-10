@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Prompt', 'Segoe UI', Tahoma, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+@page {
+    margin: 20mm;
+    @bottom-right {
+        content: counter(page);
+        font-family: 'Prompt', sans-serif;
+        font-size: 9px;
+        color: #94a3b8;
+    }
+}
+
+h1 {
+    color: #4f46e5;
+    font-size: 24px;
+    font-weight: 700;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #312e81;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 25px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 5px;
+}
+
+h3 {
+    color: #4338ca;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 18px;
+    margin-bottom: 8px;
+}
+
+p, li {
+    font-weight: 400;
+    color: #334155;
+}
+
+ul, ol {
+    margin-top: 5px;
+    margin-bottom: 15px;
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 6px;
+}
+
+code {
+    font-family: 'Consolas', monospace;
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+pre {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    border: 1px solid #e2e8f0;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+blockquote {
+    margin: 15px 0;
+    padding: 12px 20px;
+    background-color: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    color: #166534;
+    border-radius: 0 8px 8px 0;
+}
+
+blockquote p {
+    margin: 0;
+    font-weight: 500;
+    color: #14532d;
+}
+
+/* Alert modifications for markdown-pdf */
+blockquote > p strong {
+    color: #15803d;
+}

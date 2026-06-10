@@ -1,0 +1,10 @@
+{
+    "stylesheet": "server/pdf-style.css",
+    "pdf_options": {
+        "format": "A4"
+    },
+    "launch_options": {
+        "executablePath": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+    }
+}
