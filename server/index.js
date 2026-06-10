@@ -263,44 +263,81 @@ app.post('/api/import', upload.single('file'), async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
-// ====== sendEmailViaBrevo Helper ======
-async function sendEmailViaBrevo(toEmails, subject, htmlContent) {
-    const brevoApiKey = process.env.BREVO_API_KEY || process.env.GMAIL_PASS; 
-    const senderEmail = process.env.GMAIL_USER || 'nit-inventory@example.com'; 
+// ====== sendEmail Helper (Supports Local SMTP & Brevo API) ======
+async function sendEmail(toEmails, subject, htmlContent) {
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = process.env.SMTP_PORT;
+    const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+    const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_PASS;
+    const smtpSecure = process.env.SMTP_SECURE === 'true';
+    const senderEmail = process.env.SMTP_SENDER || smtpUser || 'nit-inventory@neuro.go.th';
 
-    if (!brevoApiKey) {
-        throw new Error("BREVO_API_KEY or GMAIL_PASS environment variable is missing.");
+    const recipients = Array.isArray(toEmails) ? toEmails : [toEmails];
+
+    // 1. ถ้ามีการตั้งค่า SMTP_HOST จะใช้ Local SMTP Server
+    if (smtpHost) {
+        console.log(`📡 Sending email via Local SMTP (${smtpHost}:${smtpPort}) to:`, recipients);
+        const transporterOpts = {
+            host: smtpHost,
+            port: Number(smtpPort) || 25,
+            secure: smtpSecure,
+            connectionTimeout: 10000 // 10 วินาที
+        };
+
+        // ถ้ามี Username และ Password ให้ใส่ Auth ด้วย
+        if (smtpUser && smtpPass) {
+            transporterOpts.auth = {
+                user: smtpUser,
+                pass: smtpPass
+            };
+        }
+
+        const transporter = nodemailer.createTransport(transporterOpts);
+
+        const mailOptions = {
+            from: `"NIT Inventory 🧠" <${senderEmail}>`,
+            to: recipients.join(', '),
+            subject: subject,
+            html: htmlContent
+        };
+
+        return transporter.sendMail(mailOptions);
+    } else {
+        // 2. ถ้าไม่มี SMTP_HOST ให้ใช้ Brevo API เหมือนเดิม
+        console.log("☁️ Sending email via Brevo API...");
+        const brevoApiKey = process.env.BREVO_API_KEY || process.env.GMAIL_PASS;
+        if (!brevoApiKey) {
+            throw new Error("SMTP_HOST is not configured, and BREVO_API_KEY / GMAIL_PASS is missing.");
+        }
+
+        const brevoRecipients = recipients.map(email => ({ email }));
+
+        const payload = {
+            sender: {
+                name: "NIT Inventory 🧠",
+                email: senderEmail
+            },
+            to: brevoRecipients,
+            subject: subject,
+            htmlContent: htmlContent
+        };
+
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': brevoApiKey,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || JSON.stringify(data));
+        }
+        return data;
     }
-
-    const recipients = Array.isArray(toEmails) 
-        ? toEmails.map(email => ({ email }))
-        : [{ email: toEmails }];
-
-    const payload = {
-        sender: {
-            name: "NIT Inventory 🧠",
-            email: senderEmail
-        },
-        to: recipients,
-        subject: subject,
-        htmlContent: htmlContent
-    };
-
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-            'accept': 'application/json',
-            'api-key': brevoApiKey,
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-        throw new Error(data.message || JSON.stringify(data));
-    }
-    return data;
 }
 
 // ฟังก์ชันตรวจสอบสต็อกและส่งแจ้งเตือนอัตโนมัติ
@@ -321,7 +358,7 @@ async function sendFormattedEmail(recipients, productList, alertType, systemName
     const subject = `${alertType === 'out_of_stock' ? '⚠️ [ด่วน] สินค้าหมดสต็อก' : '🔔 [แจ้งเตือน] สินค้าใกล้หมด'} - ${systemName}`;
     const htmlContent = `<div style="font-family: sans-serif; padding: 20px;"><h2>แจ้งเตือนสินค้า</h2><ul>${productHtml}</ul></div>`;
 
-    return sendEmailViaBrevo(recipients, subject, htmlContent);
+    return sendEmail(recipients, subject, htmlContent);
 }
 
 // API Endpoints
@@ -342,7 +379,7 @@ app.post('/api/notifications/test', async (req, res) => {
             </div>
         `;
 
-        await sendEmailViaBrevo(email, '🔔 ทดสอบระบบแจ้งเตือน - NIT Inventory', htmlContent);
+        await sendEmail(email, '🔔 ทดสอบระบบแจ้งเตือน - NIT Inventory', htmlContent);
         res.json({ success: true });
     } catch (err) {
         console.error('Test Email Error:', err);
@@ -458,7 +495,7 @@ app.post('/api/slips/notify-new', async (req, res) => {
             </div>
         `;
 
-        await sendEmailViaBrevo(adminEmails, `🔔 [ขออนุมัติ] ใบเบิกใหม่เลขที่ ${slipNo} - โดยคุณ ${requester}`, htmlContent);
+        await sendEmail(adminEmails, `🔔 [ขออนุมัติ] ใบเบิกใหม่เลขที่ ${slipNo} - โดยคุณ ${requester}`, htmlContent);
         res.json({ success: true, message: `Notified ${adminEmails.length} admin(s)/superadmin(s).` });
     } catch (err) {
         console.error('Notify New Slip Error:', err);
@@ -516,7 +553,7 @@ async function sendSlipStatusEmail(recipientEmail, requesterName, slipNo, status
         </div>
     `;
 
-    return sendEmailViaBrevo(recipientEmail, title, htmlContent);
+    return sendEmail(recipientEmail, title, htmlContent);
 }
 
 app.post('/api/slips/approve', async (req, res) => {
@@ -735,7 +772,7 @@ app.post('/api/users/reset-password', async (req, res) => {
             </div>
         `;
 
-        await sendEmailViaBrevo(email, '🔑 ตั้งรหัสผ่านใหม่ - NIT Inventory', htmlContent);
+        await sendEmail(email, '🔑 ตั้งรหัสผ่านใหม่ - NIT Inventory', htmlContent);
         res.json({ success: true });
     } catch (err) {
         console.error('Reset Password Error:', err);

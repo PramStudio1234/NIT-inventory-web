@@ -4,7 +4,8 @@ const path = require('path');
 
 const filesToConvert = [
     'คู่มือการใช้งาน_Admin_SuperAdmin.md',
-    'คู่มือการใช้งาน_User.md'
+    'คู่มือการใช้งาน_User.md',
+    'คู่มือการนำขึ้นเซิร์ฟเวอร์สถาบันประสาทวิทยา.md'
 ];
 
 const configPath = path.resolve(__dirname, 'config.json');
